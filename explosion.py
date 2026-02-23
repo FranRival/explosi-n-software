@@ -3,10 +3,9 @@ import math
 import random
 import numpy as np
 from PIL import Image
-from noise import pnoise3
 
 # ==========================
-# CONFIGURACIÓN MVP
+# CONFIGURACIÓN
 # ==========================
 
 WIDTH = 512
@@ -14,15 +13,15 @@ HEIGHT = 512
 FRAMES = 40
 DURATION = 1.2
 
-CORE_RADIUS = 90
+CORE_RADIUS = 80
 EXPANSION_SPEED = 220
-NOISE_STRENGTH = 0.35
+NOISE_STRENGTH = 0.25
 
-PARTICLE_COUNT = 80
+PARTICLE_COUNT = 100
 PARTICLE_SPEED = (80, 260)
 
-SMOKE_DENSITY = 0.6
-SMOKE_OPACITY = 120
+SMOKE_DENSITY = 0.7
+SMOKE_OPACITY = 110
 
 SEED = 42
 random.seed(SEED)
@@ -30,14 +29,30 @@ random.seed(SEED)
 os.makedirs("output", exist_ok=True)
 
 # ==========================
-# UTILIDADES
+# RUIDO PROCEDURAL PROPIO
 # ==========================
 
-def lerp(a, b, t):
-    return a + (b - a) * t
+def fractal_noise(x, y, t):
+    n = 0
+    scale = 1.0
+    amplitude = 1.0
+
+    for _ in range(3):
+        n += amplitude * (
+            math.sin(x * 0.03 * scale + t * 2.5) *
+            math.cos(y * 0.03 * scale + t * 2.0)
+        )
+        scale *= 2
+        amplitude *= 0.5
+
+    return n
+
+
+# ==========================
+# COLOR GRADIENT
+# ==========================
 
 def color_gradient(t):
-    # blanco → amarillo → naranja → rojo → gris
     if t < 0.2:
         return (255, 255, 255)
     elif t < 0.4:
@@ -49,6 +64,7 @@ def color_gradient(t):
     else:
         return (80, 80, 80)
 
+
 # ==========================
 # PARTÍCULAS
 # ==========================
@@ -57,13 +73,16 @@ class Particle:
     def __init__(self):
         angle = random.uniform(0, 2 * math.pi)
         speed = random.uniform(*PARTICLE_SPEED)
+
         self.vx = math.cos(angle) * speed
         self.vy = math.sin(angle) * speed
+
         self.x = WIDTH // 2
         self.y = HEIGHT // 2
+
         self.life = random.uniform(0.4, 1.0)
         self.age = 0
-        self.size = random.randint(2, 4)
+        self.size = random.randint(2, 3)
 
     def update(self, dt):
         self.x += self.vx * dt
@@ -73,8 +92,9 @@ class Particle:
     def alive(self):
         return self.age < self.life
 
+
 # ==========================
-# RENDER LOOP
+# MAIN LOOP
 # ==========================
 
 particles = [Particle() for _ in range(PARTICLE_COUNT)]
@@ -101,12 +121,13 @@ for frame in range(FRAMES):
             dy = y - center_y
             dist = math.sqrt(dx * dx + dy * dy)
 
-            noise_val = pnoise3(x * 0.02, y * 0.02, t * 3)
+            noise_val = fractal_noise(x, y, t)
             distorted_radius = radius * (1 + noise_val * NOISE_STRENGTH)
 
             if dist < distorted_radius:
                 fade = 1 - (dist / distorted_radius)
                 color = color_gradient(t)
+
                 img[y, x, 0] = int(color[0] * fade)
                 img[y, x, 1] = int(color[1] * fade)
                 img[y, x, 2] = int(color[2] * fade)
@@ -117,7 +138,8 @@ for frame in range(FRAMES):
     # =====================
 
     if SMOKE_DENSITY > 0:
-        smoke_radius = radius * 1.3
+        smoke_radius = radius * 1.4
+
         for y in range(HEIGHT):
             for x in range(WIDTH):
                 dx = x - center_x
@@ -127,6 +149,7 @@ for frame in range(FRAMES):
                 if dist < smoke_radius:
                     fade = 1 - (dist / smoke_radius)
                     alpha = int(SMOKE_OPACITY * fade * SMOKE_DENSITY)
+
                     img[y, x, 0] = max(img[y, x, 0], 70)
                     img[y, x, 1] = max(img[y, x, 1], 70)
                     img[y, x, 2] = max(img[y, x, 2], 70)
@@ -145,13 +168,13 @@ for frame in range(FRAMES):
             if 0 <= px < WIDTH and 0 <= py < HEIGHT:
                 img[py, px, 0] = 255
                 img[py, px, 1] = 200
-                img[py, px, 2] = 50
+                img[py, px, 2] = 80
                 img[py, px, 3] = 255
 
     # =====================
-    # EXPORT FRAME
+    # EXPORT
     # =====================
 
     Image.fromarray(img, 'RGBA').save(f"output/frame_{frame:03}.png")
 
-print("Explosión generada en carpeta output/")
+print("Explosión generada en carpeta /output")
