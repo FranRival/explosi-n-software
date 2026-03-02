@@ -3,6 +3,7 @@ import math
 import random
 import numpy as np
 from PIL import Image
+from noise import pnoise2
 
 # ==========================
 # CONFIGURACIÓN
@@ -15,7 +16,7 @@ DURATION = 1.2
 
 CORE_RADIUS = 80
 EXPANSION_SPEED = 220
-NOISE_STRENGTH = 0.25
+NOISE_STRENGTH = 0.35
 
 PARTICLE_COUNT = 100
 PARTICLE_SPEED = (80, 260)
@@ -32,22 +33,23 @@ os.makedirs("output", exist_ok=True)
 # RUIDO PROCEDURAL PROPIO
 # ==========================
 
-def fractal_noise(x, y, t):
-    n = 0
-    scale = 1.0
-    amplitude = 1.0
 
-    for _ in range(3):
-        n += amplitude * (
-            math.sin(x * 0.03 * scale + t * 2.5) *
-            math.cos(y * 0.03 * scale + t * 2.0)
-        )
-        scale *= 2
-        amplitude *= 0.5
+def perlin_fractal(x, y, t):
+    scale = 0.01
+    octaves = 4
+    persistence = 0.5
+    lacunarity = 2.0
 
-    return n
-
-
+    return pnoise2(
+        x * scale,
+        y * scale + t * 2.0,  # animación vertical
+        octaves=octaves,
+        persistence=persistence,
+        lacunarity=lacunarity,
+        repeatx=1024,
+        repeaty=1024,
+        base=SEED
+    )
 # ==========================
 # COLOR GRADIENT
 # ==========================
@@ -121,7 +123,7 @@ for frame in range(FRAMES):
             dy = y - center_y
             dist = math.sqrt(dx * dx + dy * dy)
 
-            noise_val = fractal_noise(x, y, t)
+            noise_val = perlin_fractal(x, y, t)
             distorted_radius = radius * (1 + noise_val * NOISE_STRENGTH)
 
             if dist < distorted_radius:
