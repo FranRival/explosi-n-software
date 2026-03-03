@@ -69,6 +69,8 @@ PARTICLE_DRAG = 0.97
 # =========================================================
 # FUNCIONES
 # =========================================================
+def clamp(value, min_val=0, max_val=255):
+    return max(min_val, min(max_val, int(value)))
 
 def perlin(x, y, t, scale):
     return pnoise2(
@@ -196,16 +198,26 @@ for frame in range(FRAMES):
 
             if dist < inner_ring:
                 fade = 1 - (dist / inner_ring)
-                intensity = int(255 * fade * 1.8)
+                intensity = clamp(255 * fade * 1.8)
                 img[y, x] = (intensity, intensity, intensity, 255)
 
             elif dist < mid_ring:
                 fade = 1 - (dist / mid_ring)
-                img[y, x] = (255, int(200 * fade), int(50 * fade), 255)
+                img[y, x] = (
+                    clamp(255 * fade),
+                    clamp(200 * fade),
+                    clamp(50 * fade),
+                    255
+                )
 
             elif dist < final_radius:
                 fade = 1 - (dist / final_radius)
-                img[y, x] = (int(200 * fade), int(70 * fade), int(20 * fade), 255)
+                img[y, x] = (
+                    clamp(200 * fade),
+                    clamp(70 * fade),
+                    clamp(20 * fade),
+                    255
+                )
 
     # -------------------------
     # ESTALLIDO SECUNDARIO
