@@ -5,6 +5,17 @@ import numpy as np
 from PIL import Image
 from noise import pnoise2
 
+
+# ==========================
+# VERSION 2
+# ==========================
+
+# ==========================
+# EJECUCION
+# C:\Users\dell\explosion_env\Scripts\python.exe C:\Users\dell\explosion-software\explosion.py
+# ==========================
+
+
 # ==========================
 # CONFIGURACIÓN
 # ==========================
