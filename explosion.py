@@ -7,17 +7,13 @@ from noise import pnoise2
 
 
 # ==========================
-# VERSION 2
-# ==========================
-
-# ==========================
 # EJECUCION
 # C:\Users\dell\explosion_env\Scripts\python.exe C:\Users\dell\explosion-software\explosion.py
 # ==========================
 
 
 # ==========================
-# CONFIGURACIÓN
+# VERSION 3 – ESTRUCTURADA
 # ==========================
 
 WIDTH = 512
@@ -25,61 +21,53 @@ HEIGHT = 512
 FRAMES = 40
 DURATION = 1.2
 
-CORE_RADIUS = 80
+# --------------------------
+# NUEVAS VARIABLES CLAVE
+# --------------------------
+
+RADIUS_CORE = 40
+RADIUS_INNER = 80
+RADIUS_OUTER = 120
+
 EXPANSION_SPEED = 220
-NOISE_STRENGTH = 0.35
 
-PARTICLE_COUNT = 100
-PARTICLE_SPEED = (80, 260)
+INTENSITY_CORE = 1.8
 
-SMOKE_DENSITY = 0.7
-SMOKE_OPACITY = 110
+NOISE_SCALE = 0.008
+NOISE_STRENGTH = 0.45
+
+SMOKE_OPACITY = 120
+SMOKE_SCALE = 0.004
+
+PARTICLE_COUNT = 120
+PARTICLE_SPEED = (120, 300)
+PARTICLE_DRAG = 0.96
 
 SEED = 42
 random.seed(SEED)
 
 os.makedirs("output", exist_ok=True)
 
+
 # ==========================
-# RUIDO PROCEDURAL PROPIO
+# PERLIN FRACTAL
 # ==========================
 
-
-def perlin_fractal(x, y, t):
-    scale = 0.01
-    octaves = 4
-    persistence = 0.5
-    lacunarity = 2.0
-
+def perlin(x, y, t, scale):
     return pnoise2(
         x * scale,
-        y * scale + t * 2.0,  # animación vertical
-        octaves=octaves,
-        persistence=persistence,
-        lacunarity=lacunarity,
+        y * scale + t * 2.0,
+        octaves=4,
+        persistence=0.5,
+        lacunarity=2.0,
         repeatx=1024,
         repeaty=1024,
         base=SEED
     )
-# ==========================
-# COLOR GRADIENT
-# ==========================
-
-def color_gradient(t):
-    if t < 0.2:
-        return (255, 255, 255)
-    elif t < 0.4:
-        return (255, 220, 120)
-    elif t < 0.6:
-        return (255, 140, 40)
-    elif t < 0.8:
-        return (200, 60, 20)
-    else:
-        return (80, 80, 80)
 
 
 # ==========================
-# PARTÍCULAS
+# PARTÍCULAS MEJORADAS
 # ==========================
 
 class Particle:
@@ -100,17 +88,20 @@ class Particle:
     def update(self, dt):
         self.x += self.vx * dt
         self.y += self.vy * dt
+        self.vx *= PARTICLE_DRAG
+        self.vy *= PARTICLE_DRAG
         self.age += dt
 
     def alive(self):
         return self.age < self.life
 
 
+particles = [Particle() for _ in range(PARTICLE_COUNT)]
+
+
 # ==========================
 # MAIN LOOP
 # ==========================
-
-particles = [Particle() for _ in range(PARTICLE_COUNT)]
 
 for frame in range(FRAMES):
 
@@ -122,55 +113,78 @@ for frame in range(FRAMES):
     center_x = WIDTH // 2
     center_y = HEIGHT // 2
 
-    radius = CORE_RADIUS + EXPANSION_SPEED * t
+    base_radius = EXPANSION_SPEED * t
 
-    # =====================
-    # FIRE CORE
-    # =====================
+    core_radius = RADIUS_CORE + base_radius
+    inner_radius = RADIUS_INNER + base_radius
+    outer_radius = RADIUS_OUTER + base_radius
 
     for y in range(HEIGHT):
         for x in range(WIDTH):
+
             dx = x - center_x
             dy = y - center_y
             dist = math.sqrt(dx * dx + dy * dy)
 
-            noise_val = perlin_fractal(x, y, t)
-            distorted_radius = radius * (1 + noise_val * NOISE_STRENGTH)
+            # Noise para deformar bordes
+            noise_val = perlin(x, y, t, NOISE_SCALE)
+            distortion = 1 + noise_val * NOISE_STRENGTH
 
-            if dist < distorted_radius:
-                fade = 1 - (dist / distorted_radius)
-                color = color_gradient(t)
+            # --------------------------
+            # NÚCLEO BLANCO
+            # --------------------------
+            if dist < core_radius * distortion:
+                fade = 1 - (dist / (core_radius * distortion))
+                intensity = min(255, int(255 * fade * INTENSITY_CORE))
+                img[y, x] = (intensity, intensity, intensity, 255)
 
-                img[y, x, 0] = int(color[0] * fade)
-                img[y, x, 1] = int(color[1] * fade)
-                img[y, x, 2] = int(color[2] * fade)
-                img[y, x, 3] = int(255 * fade)
+            # --------------------------
+            # FUEGO INTERNO
+            # --------------------------
+            elif dist < inner_radius * distortion:
+                fade = 1 - (dist / (inner_radius * distortion))
+                r = 255
+                g = int(200 * fade)
+                b = int(60 * fade)
+                img[y, x] = (r, g, b, 255)
 
-    # =====================
-    # SMOKE
-    # =====================
+            # --------------------------
+            # FUEGO EXTERNO
+            # --------------------------
+            elif dist < outer_radius * distortion:
+                fade = 1 - (dist / (outer_radius * distortion))
+                r = int(200 * fade)
+                g = int(60 * fade)
+                b = int(20 * fade)
+                img[y, x] = (r, g, b, 255)
 
-    if SMOKE_DENSITY > 0:
-        smoke_radius = radius * 1.4
+    # ==========================
+    # HUMO MEJORADO
+    # ==========================
 
-        for y in range(HEIGHT):
-            for x in range(WIDTH):
-                dx = x - center_x
-                dy = y - center_y - t * 60  # humo sube
-                dist = math.sqrt(dx * dx + dy * dy)
+    smoke_radius = outer_radius * 1.5
 
-                if dist < smoke_radius:
-                    fade = 1 - (dist / smoke_radius)
-                    alpha = int(SMOKE_OPACITY * fade * SMOKE_DENSITY)
+    for y in range(HEIGHT):
+        for x in range(WIDTH):
 
+            dx = x - center_x
+            dy = y - center_y - t * 80
+            dist = math.sqrt(dx * dx + dy * dy)
+
+            if dist < smoke_radius:
+                smoke_noise = perlin(x, y, t, SMOKE_SCALE)
+                fade = 1 - (dist / smoke_radius)
+                alpha = int(SMOKE_OPACITY * fade * abs(smoke_noise))
+
+                if alpha > 5:
                     img[y, x, 0] = max(img[y, x, 0], 70)
                     img[y, x, 1] = max(img[y, x, 1], 70)
                     img[y, x, 2] = max(img[y, x, 2], 70)
                     img[y, x, 3] = max(img[y, x, 3], alpha)
 
-    # =====================
-    # PARTICLES
-    # =====================
+    # ==========================
+    # PARTÍCULAS
+    # ==========================
 
     for p in particles:
         if p.alive():
@@ -179,15 +193,12 @@ for frame in range(FRAMES):
             py = int(p.y)
 
             if 0 <= px < WIDTH and 0 <= py < HEIGHT:
-                img[py, px, 0] = 255
-                img[py, px, 1] = 200
-                img[py, px, 2] = 80
-                img[py, px, 3] = 255
+                img[py, px] = (255, 200, 80, 255)
 
-    # =====================
+    # ==========================
     # EXPORT
-    # =====================
+    # ==========================
 
     Image.fromarray(img, 'RGBA').save(f"output/frame_{frame:03}.png")
 
-print("Explosión generada en carpeta /output")
+print("Explosión versión 3 generada en /output")
