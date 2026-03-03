@@ -262,7 +262,7 @@ for frame in range(FRAMES):
 
     # =========================================================
     # PARTICULAS
-    # =========================================================
+    #implementacion desastroza. Msimo problema que tuvimos con el visor. =========================================================
 
     for p in particles:
         if p.alive():
