@@ -12,6 +12,7 @@ from noise import pnoise2
 
 # =========================================================
 # NIVEL 1 COMPLETO – CONTROL ANGULAR + ENERGÍA + RITMO
+# RESULTADO - mediocre. aun no comercial
 # =========================================================
 
 WIDTH = 512
