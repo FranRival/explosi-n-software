@@ -3,6 +3,8 @@
 # EJECUCION
 # C:\Users\dell\explosion_env\Scripts\python.exe C:\Users\dell\explosion-software\explosion.py
 # ==========================
+
+
 import os
 import math
 import random
