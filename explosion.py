@@ -34,40 +34,43 @@ os.makedirs("output", exist_ok=True)
 # PARÁMETROS NIVEL 1
 # =========================================================
 
-# --- Control angular ---
 ANGULAR_BIAS_UP = 1.6
 FAN_OPENING = math.pi * 0.9
 TEAR_FACTOR = 1.4
 RADIAL_HOLE = 25
 
-# --- Energía ---
 BASE_SPEED = 220
 ENERGY_PEAK = 2.0
 ENERGY_REBOUND = 0.35
 
-# --- Ritmo ---
 SECONDARY_BURST_TIME = 0.45
 MICRO_WAVE_FREQ = 10
 
-# --- Capas ---
 RADIUS_CORE = 40
 RADIUS_INNER = 85
 RADIUS_OUTER = 130
 
 INTENSITY_CORE = 2.0
 
-# --- Ruido ---
 NOISE_SCALE = 0.008
 NOISE_STRENGTH = 0.5
 
-# --- Humo ---
 SMOKE_OPACITY = 130
 SMOKE_SCALE = 0.004
 
-# --- Partículas ---
 PARTICLE_COUNT = 180
 PARTICLE_SPEED = (140, 300)
 PARTICLE_DRAG = 0.96
+
+
+# =========================================================
+# PARÁMETROS NIVEL 2 (CAMPO DE DENSIDAD)
+# =========================================================
+
+DENSITY_FALLOFF = 2.0
+DENSITY_HEIGHT_LIFT = 120
+DENSITY_NOISE_SCALE = 0.01
+DENSITY_NOISE_STRENGTH = 0.6
 
 
 # =========================================================
@@ -108,6 +111,31 @@ def fan_mask(angle):
 
 def tear_shape(angle):
     return 1 + (math.sin(angle) * 0.35 * TEAR_FACTOR)
+
+
+# =========================================================
+# CAMPO DE DENSIDAD (NIVEL 2)
+# =========================================================
+
+def density_field(x, y, t, base_radius):
+
+    dx = x - CENTER_X
+    dy = y - CENTER_Y
+
+    # elevación vertical
+    dy_lift = dy + t * DENSITY_HEIGHT_LIFT
+
+    dist = math.sqrt(dx * dx + dy_lift * dy_lift)
+
+    radial = max(0, 1 - dist / base_radius)
+
+    radial = radial ** DENSITY_FALLOFF
+
+    noise = perlin(x, y, t, DENSITY_NOISE_SCALE)
+
+    density = radial + noise * DENSITY_NOISE_STRENGTH
+
+    return max(0, density)
 
 
 # =========================================================
@@ -182,6 +210,15 @@ for frame in range(FRAMES):
             if dist < RADIAL_HOLE:
                 continue
 
+            # -----------------------------
+            # CAMPO DE DENSIDAD
+            # -----------------------------
+
+            density = density_field(x, y, t, outer_radius)
+
+            if density <= 0:
+                continue
+
             ang = angular_weight(angle)
             tear = tear_shape(angle)
 
@@ -191,33 +228,33 @@ for frame in range(FRAMES):
 
             distortion = (1 + noise_val * NOISE_STRENGTH) * wave * tear * ang
 
-            final_radius = outer_radius * distortion
+            final_radius = outer_radius * distortion * (1 + density)
 
             if dist > final_radius:
                 continue
 
-            # --------- CAPAS ESTRUCTURALES ---------
+            # --------- CAPAS ---------
 
             if dist < core_radius * distortion:
                 fade = 1 - (dist / (core_radius * distortion))
-                intensity = clamp(255 * fade * INTENSITY_CORE)
+                intensity = clamp(255 * fade * INTENSITY_CORE * density)
                 img[y, x] = (intensity, intensity, intensity, 255)
 
             elif dist < inner_radius * distortion:
                 fade = 1 - (dist / (inner_radius * distortion))
                 img[y, x] = (
-                    clamp(255 * fade),
-                    clamp(200 * fade),
-                    clamp(70 * fade),
+                    clamp(255 * fade * density),
+                    clamp(200 * fade * density),
+                    clamp(70 * fade * density),
                     255
                 )
 
             else:
                 fade = 1 - (dist / final_radius)
                 img[y, x] = (
-                    clamp(200 * fade),
-                    clamp(60 * fade),
-                    clamp(20 * fade),
+                    clamp(200 * fade * density),
+                    clamp(60 * fade * density),
+                    clamp(20 * fade * density),
                     255
                 )
 
@@ -262,7 +299,7 @@ for frame in range(FRAMES):
 
     # =========================================================
     # PARTICULAS
-    #implementacion desastroza. Msimo problema que tuvimos con el visor. =========================================================
+    # =========================================================
 
     for p in particles:
         if p.alive():
@@ -275,4 +312,4 @@ for frame in range(FRAMES):
 
     Image.fromarray(img, 'RGBA').save(f"output/frame_{frame:03}.png")
 
-print("Nivel 0 + Nivel 1 COMPLETO generado.")
+print("Nivel 0 + Nivel 1 + Nivel 2 (campo de densidad) generado.")
