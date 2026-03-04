@@ -77,6 +77,10 @@ DENSITY_NOISE_STRENGTH = 0.6
 HEIGHT_DENSITY_WEIGHT = 1.7
 HEIGHT_DENSITY_POWER = 1.4
 
+# compresión interna de masa
+MASS_COMPRESSION = 1.8
+MASS_CORE_RADIUS = 0.35
+
 
 # =========================================================
 # UTILIDADES
@@ -136,6 +140,23 @@ def height_density(y, t):
 
 
 # =========================================================
+# COMPRESIÓN INTERNA DE MASA
+# =========================================================
+
+def mass_compression(dist, base_radius):
+
+    core_limit = base_radius * MASS_CORE_RADIUS
+
+    if dist < core_limit:
+
+        compression = 1 - (dist / core_limit)
+
+        compression = compression ** MASS_COMPRESSION
+
+        return compression
+
+    return 0
+# =========================================================
 # CAMPO DE DENSIDAD
 # =========================================================
 
@@ -175,12 +196,16 @@ def density_field(x, y, t, base_radius):
 
     height_component = height_density(y, t)
 
+	# ----------------------
+    # compresión interna
+    # ---------------------
+	compression = mass_compression(dist, base_radius)
+  
+    
     # -----------------------------
     # densidad final
     # -----------------------------
-
-    density = base_density + noise_density + height_component
-
+	density = base_density + noise_density + height_component + compression
     return max(0, density)
 
 
