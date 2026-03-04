@@ -199,13 +199,13 @@ def density_field(x, y, t, base_radius):
 	# ----------------------
     # compresión interna
     # ---------------------
-	compression = mass_compression(dist, base_radius)
+    compression = mass_compression(dist, base_radius)
   
     
     # -----------------------------
     # densidad final
     # -----------------------------
-	density = base_density + noise_density + height_component + compression
+    density = base_density + noise_density + height_component + compression
     return max(0, density)
 
 
