@@ -1,4 +1,3 @@
-
 # ==========================
 # EJECUCION
 # C:\Users\dell\explosion_env\Scripts\python.exe C:\Users\dell\explosion-software\explosion.py
@@ -75,7 +74,6 @@ DENSITY_HEIGHT_LIFT = 120
 DENSITY_NOISE_SCALE = 0.01
 DENSITY_NOISE_STRENGTH = 0.6
 
-# influencia vertical (ascenso de la explosión)
 HEIGHT_DENSITY_WEIGHT = 1.7
 HEIGHT_DENSITY_POWER = 1.4
 
@@ -118,29 +116,27 @@ def fan_mask(angle):
 
 def tear_shape(angle):
     return 1 + (math.sin(angle) * 0.35 * TEAR_FACTOR)
-    
+
+
 # =========================================================
-# INFLUENCIA DE ALTURA (ASCENSO DE LA EXPLOSION)
+# INFLUENCIA DE ALTURA
 # =========================================================
 
 def height_density(y, t):
 
-    # desplazamiento vertical ascendente
     lift = t * DENSITY_HEIGHT_LIFT
 
-    # posición vertical relativa
     height_factor = (CENTER_Y - y + lift) / HEIGHT
 
     height_factor = max(0, height_factor)
 
-    # peso vertical
     height_factor = height_factor ** HEIGHT_DENSITY_POWER
 
     return height_factor * HEIGHT_DENSITY_WEIGHT
 
 
 # =========================================================
-# CAMPO DE DENSIDAD (NIVEL 2)
+# CAMPO DE DENSIDAD
 # =========================================================
 
 def density_field(x, y, t, base_radius):
@@ -148,7 +144,6 @@ def density_field(x, y, t, base_radius):
     dx = x - CENTER_X
     dy = y - CENTER_Y
 
-    # elevación vertical
     dy_lift = dy + t * DENSITY_HEIGHT_LIFT
 
     dist = math.sqrt(dx * dx + dy_lift * dy_lift)
@@ -158,9 +153,7 @@ def density_field(x, y, t, base_radius):
     # -----------------------------
 
     radial = max(0, 1 - dist / base_radius)
-
     radial = radial ** RADIAL_DENSITY_POWER
-
     radial *= RADIAL_DENSITY_WEIGHT
 
     # -----------------------------
@@ -169,45 +162,48 @@ def density_field(x, y, t, base_radius):
 
     base_density = radial ** DENSITY_FALLOFF
 
-    
     # -----------------------------
-	# ruido procedural
-	# -----------------------------
+    # ruido procedural
+    # -----------------------------
 
-	noise = perlin(x, y, t, DENSITY_NOISE_SCALE)
+    noise = perlin(x, y, t, DENSITY_NOISE_SCALE)
+    noise_density = noise * DENSITY_NOISE_STRENGTH
 
-	noise_density = noise * DENSITY_NOISE_STRENGTH
+    # -----------------------------
+    # influencia de altura
+    # -----------------------------
 
-	# -----------------------------
-	# influencia de altura
-	# -----------------------------
+    height_component = height_density(y, t)
 
-	height_component = height_density(y, t)
+    # -----------------------------
+    # densidad final
+    # -----------------------------
 
-	# -----------------------------
-	# densidad final
-	# -----------------------------
+    density = base_density + noise_density + height_component
 
-	density = base_density + noise_density + height_component
+    return max(0, density)
 
-	return max(0, density)
 
 # =========================================================
-# PARTICULAS CON DELAY
+# PARTICULAS
 # =========================================================
 
 class Particle:
+
     def __init__(self):
+
         self.angle = random.uniform(-math.pi, math.pi)
         self.delay = random.uniform(0.0, 0.18)
         self.life = random.uniform(0.6, 1.2)
 
         speed = random.uniform(*PARTICLE_SPEED)
+
         self.vx = math.cos(self.angle) * speed
         self.vy = math.sin(self.angle) * speed
 
         self.x = CENTER_X
         self.y = CENTER_Y
+
         self.age = 0
 
     def update(self, dt, global_t):
@@ -264,10 +260,6 @@ for frame in range(FRAMES):
             if dist < RADIAL_HOLE:
                 continue
 
-            # -----------------------------
-            # CAMPO DE DENSIDAD
-            # -----------------------------
-
             density = density_field(x, y, t, outer_radius)
 
             if density <= 0:
@@ -287,15 +279,17 @@ for frame in range(FRAMES):
             if dist > final_radius:
                 continue
 
-            # --------- CAPAS ---------
-
             if dist < core_radius * distortion:
+
                 fade = 1 - (dist / (core_radius * distortion))
                 intensity = clamp(255 * fade * INTENSITY_CORE * density)
+
                 img[y, x] = (intensity, intensity, intensity, 255)
 
             elif dist < inner_radius * distortion:
+
                 fade = 1 - (dist / (inner_radius * distortion))
+
                 img[y, x] = (
                     clamp(255 * fade * density),
                     clamp(200 * fade * density),
@@ -304,7 +298,9 @@ for frame in range(FRAMES):
                 )
 
             else:
+
                 fade = 1 - (dist / final_radius)
+
                 img[y, x] = (
                     clamp(200 * fade * density),
                     clamp(60 * fade * density),
@@ -312,24 +308,19 @@ for frame in range(FRAMES):
                     255
                 )
 
-    # =========================================================
-    # ESTALLIDO SECUNDARIO
-    # =========================================================
-
     if t > SECONDARY_BURST_TIME:
+
         burst_radius = base_radius * 0.6
+
         for y in range(HEIGHT):
             for x in range(WIDTH):
+
                 dx = x - CENTER_X
                 dy = y - CENTER_Y
                 dist = math.sqrt(dx * dx + dy * dy)
 
                 if abs(dist - burst_radius) < 3:
                     img[y, x] = (255, 220, 100, 255)
-
-    # =========================================================
-    # HUMO
-    # =========================================================
 
     smoke_radius = outer_radius * 1.5
 
@@ -338,32 +329,37 @@ for frame in range(FRAMES):
 
             dx = x - CENTER_X
             dy = y - CENTER_Y - t * 80
+
             dist = math.sqrt(dx * dx + dy * dy)
 
             if dist < smoke_radius:
+
                 smoke_noise = perlin(x, y, t, SMOKE_SCALE)
+
                 fade = 1 - (dist / smoke_radius)
+
                 alpha = int(SMOKE_OPACITY * fade * abs(smoke_noise))
 
                 if alpha > 5:
+
                     img[y, x, 0] = max(img[y, x, 0], 70)
                     img[y, x, 1] = max(img[y, x, 1], 70)
                     img[y, x, 2] = max(img[y, x, 2], 70)
                     img[y, x, 3] = max(img[y, x, 3], alpha)
 
-    # =========================================================
-    # PARTICULAS
-    # =========================================================
-
     for p in particles:
+
         if p.alive():
+
             p.update(dt, t)
+
             px = int(p.x)
             py = int(p.y)
 
             if 0 <= px < WIDTH and 0 <= py < HEIGHT:
                 img[py, px] = (255, 200, 80, 255)
 
-    Image.fromarray(img, 'RGBA').save(f"output/frame_{frame:03}.png")
+    Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
+
 
 print("Nivel 0 + Nivel 1 + Nivel 2 (campo de densidad) generado.")
