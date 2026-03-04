@@ -75,6 +75,10 @@ DENSITY_HEIGHT_LIFT = 120
 DENSITY_NOISE_SCALE = 0.01
 DENSITY_NOISE_STRENGTH = 0.6
 
+# influencia vertical (ascenso de la explosión)
+HEIGHT_DENSITY_WEIGHT = 1.7
+HEIGHT_DENSITY_POWER = 1.4
+
 
 # =========================================================
 # UTILIDADES
@@ -114,6 +118,25 @@ def fan_mask(angle):
 
 def tear_shape(angle):
     return 1 + (math.sin(angle) * 0.35 * TEAR_FACTOR)
+    
+# =========================================================
+# INFLUENCIA DE ALTURA (ASCENSO DE LA EXPLOSION)
+# =========================================================
+
+def height_density(y, t):
+
+    # desplazamiento vertical ascendente
+    lift = t * DENSITY_HEIGHT_LIFT
+
+    # posición vertical relativa
+    height_factor = (CENTER_Y - y + lift) / HEIGHT
+
+    height_factor = max(0, height_factor)
+
+    # peso vertical
+    height_factor = height_factor ** HEIGHT_DENSITY_POWER
+
+    return height_factor * HEIGHT_DENSITY_WEIGHT
 
 
 # =========================================================
@@ -146,21 +169,28 @@ def density_field(x, y, t, base_radius):
 
     base_density = radial ** DENSITY_FALLOFF
 
+    
     # -----------------------------
-    # ruido procedural
-    # -----------------------------
+	# ruido procedural
+	# -----------------------------
 
-    noise = perlin(x, y, t, DENSITY_NOISE_SCALE)
+	noise = perlin(x, y, t, DENSITY_NOISE_SCALE)
 
-    noise_density = noise * DENSITY_NOISE_STRENGTH
+	noise_density = noise * DENSITY_NOISE_STRENGTH
 
-    # -----------------------------
-    # densidad final
-    # -----------------------------
+	# -----------------------------
+	# influencia de altura
+	# -----------------------------
 
-    density = base_density + noise_density
+	height_component = height_density(y, t)
 
-    return max(0, density)
+	# -----------------------------
+	# densidad final
+	# -----------------------------
+
+	density = base_density + noise_density + height_component
+
+	return max(0, density)
 
 # =========================================================
 # PARTICULAS CON DELAY
