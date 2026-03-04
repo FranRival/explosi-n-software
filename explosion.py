@@ -81,6 +81,19 @@ HEIGHT_DENSITY_POWER = 1.4
 MASS_COMPRESSION = 1.8
 MASS_CORE_RADIUS = 0.35
 
+# =========================================================
+# RUIDO FRACTAL AVANZADO (fBm)
+# =========================================================
+
+FBM_OCTAVES = 6
+FBM_GAIN = 0.5
+FBM_LACUNARITY = 2.0
+
+FBM_SCALE_MACRO = 0.004
+FBM_SCALE_DETAIL = 0.02
+
+FBM_STRENGTH = 0.65
+
 
 # =========================================================
 # UTILIDADES
@@ -101,7 +114,35 @@ def perlin(x, y, t, scale):
         repeaty=1024,
         base=SEED
     )
+    
+    
+# =========================================================
+# FRACTAL BROWNIAN MOTION
+# =========================================================
 
+def fbm(x, y, t, scale):
+
+    value = 0.0
+    amplitude = 1.0
+    frequency = scale
+
+    for i in range(FBM_OCTAVES):
+
+        n = pnoise2(
+            x * frequency,
+            y * frequency + t * 2.0,
+            repeatx=1024,
+            repeaty=1024,
+            base=SEED + i
+        )
+
+        value += n * amplitude
+
+        frequency *= FBM_LACUNARITY
+        amplitude *= FBM_GAIN
+
+    return value
+    
 
 def energy_curve(t):
     peak = math.exp(-4 * t) * ENERGY_PEAK
@@ -189,6 +230,16 @@ def density_field(x, y, t, base_radius):
 
     noise = perlin(x, y, t, DENSITY_NOISE_SCALE)
     noise_density = noise * DENSITY_NOISE_STRENGTH
+    
+    
+    # -----------------------------
+	# fractal brownian motion
+	# -----------------------------
+
+	fbm_macro = fbm(x, y, t, FBM_SCALE_MACRO)
+	fbm_detail = fbm(x + 500, y + 500, t, FBM_SCALE_DETAIL)
+
+	fbm_value = (fbm_macro * 0.7 + fbm_detail * 0.3) * FBM_STRENGTH
 
     # -----------------------------
     # influencia de altura
@@ -205,7 +256,7 @@ def density_field(x, y, t, base_radius):
     # -----------------------------
     # densidad final
     # -----------------------------
-    density = base_density + noise_density + height_component + compression
+    density = base_density + noise_density + height_component + compression + fbm_value
     return max(0, density)
 
 
