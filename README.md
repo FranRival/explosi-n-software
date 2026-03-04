@@ -47,8 +47,8 @@
 ### Nivel 2 — Campo de densidad volumétrica (2.5D)
 
 #### Campo de densidad
-	•	- Densidad continua en lugar de límites radiales
-	•	- Influencia de distancia radial
+	•	- Densidad continua en lugar de límites radiales: densidad continua + influencia radial + influencia vertical + compresion interna + ruido dentro del campo de densidad
+	•	- Influencia de distancia radial: densidad continua + influencia radial + elevacion vertical + ruido procedural
 	•	- Influencia de altura (ascenso de la explosión)
 	•	- Compresión interna de masa
 

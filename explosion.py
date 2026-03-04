@@ -24,6 +24,9 @@ DURATION = 1.3
 CENTER_X = WIDTH // 2
 CENTER_Y = HEIGHT // 2
 
+RADIAL_DENSITY_WEIGHT = 1.4
+RADIAL_DENSITY_POWER = 1.6
+
 SEED = 42
 random.seed(SEED)
 
@@ -127,16 +130,37 @@ def density_field(x, y, t, base_radius):
 
     dist = math.sqrt(dx * dx + dy_lift * dy_lift)
 
+    # -----------------------------
+    # influencia radial
+    # -----------------------------
+
     radial = max(0, 1 - dist / base_radius)
 
-    radial = radial ** DENSITY_FALLOFF
+    radial = radial ** RADIAL_DENSITY_POWER
+
+    radial *= RADIAL_DENSITY_WEIGHT
+
+    # -----------------------------
+    # densidad base
+    # -----------------------------
+
+    base_density = radial ** DENSITY_FALLOFF
+
+    # -----------------------------
+    # ruido procedural
+    # -----------------------------
 
     noise = perlin(x, y, t, DENSITY_NOISE_SCALE)
 
-    density = radial + noise * DENSITY_NOISE_STRENGTH
+    noise_density = noise * DENSITY_NOISE_STRENGTH
+
+    # -----------------------------
+    # densidad final
+    # -----------------------------
+
+    density = base_density + noise_density
 
     return max(0, density)
-
 
 # =========================================================
 # PARTICULAS CON DELAY
