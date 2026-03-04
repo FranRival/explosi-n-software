@@ -3,7 +3,7 @@
 ### Nivel 0 — Base física de la explosión
 	•	- Sistema de partículas
 	•	- Dirección radial desde el centro
-	•	Velocidad inicial aleatoria
+	•	- Velocidad inicial aleatoria
 	•	- Movimiento con vectores vx, vy
 	•	- Decaimiento de velocidad (drag)
 	•	- Tiempo de vida de cada partícula (life, age)
@@ -11,7 +11,7 @@
 
 ⸻
 
-### Nivel 1 — Control estructural y artístico
+### Nivel 1 — Control estructural y artístico - aqui estamos 
 
 #### Control angular
 	•	- Más densidad hacia arriba (angular_weight)
@@ -44,6 +44,94 @@
 
 -----
 
+### Nivel 2 — Campo de densidad volumétrica (2.5D)
+
+#### Campo de densidad
+	•	- Densidad continua en lugar de límites radiales
+	•	- Influencia de distancia radial
+	•	- Influencia de altura (ascenso de la explosión)
+	•	- Compresión interna de masa
+
+#### Ruido fractal avanzado
+	•	- Fractal Brownian Motion (fBm)
+	•	- 6–8 octavas de ruido
+	•	- Escalas múltiples
+	•	- Macroforma + microdetalle
+
+#### Distorsión temporal
+	•	- Evolución del campo de densidad en el tiempo
+	•	- Turbulencia dinámica
+
+#### Masa volumétrica
+	•	- Formación de bultos tipo hongo
+	•	- Estructura irregular interna
+	•	- Volumen aparente
+
+⸻
+
+### Nivel 3 — Modelo térmico y sombreado volumétrico
+
+#### Modelo térmico continuo
+	•	- Temperatura derivada de la densidad
+	•	- Gradiente térmico continuo
+	•	- Transición física entre núcleo y periferia
+
+#### Iluminación volumétrica falsa
+	•	- Cálculo de gradiente de densidad
+	•	- Aproximación de normales
+	•	- Dirección de luz simulada
+
+#### Auto-sombreado
+	•	- Oscurecimiento interno
+	•	- Volumen perceptual
+	•	- Profundidad visual
+
+⸻
+
+### Nivel 4 — Composición visual y post-procesado
+
+#### Bloom
+	•	- Desenfoque de zonas brillantes
+	•	- Expansión de luminancia
+
+#### Compresión tonal
+	•	- Ajuste de rango dinámico
+	•	- Balance de brillo y contraste
+
+#### Suavizado
+	•	- Difuminado volumétrico
+	•	- Eliminación de bordes duros
+
+#### Corrección de color
+	•	- Ajuste de gradientes térmicos
+	•	- Intensificación de colores de fuego
+
+⸻
+
+### Nivel 5 — Sistema procedural completo
+
+#### Variabilidad procedural
+	•	- Generación de múltiples estilos de explosión
+	•	- Parámetros configurables
+
+#### Presets de explosión
+	•	- Explosión realista
+	•	Explosión estilizada
+	•	Explosión cinematográfica
+	•	Explosión abstracta
+
+#### Control artístico
+	•	Modificación de forma global
+	•	Modificación de intensidad energética
+	•	Modificación de dinámica temporal
+
+#### Exportación
+	•	Secuencias PNG
+	•	GIF animado
+	•	Sprite sheets para motores de juego
+
+
+-----
 
 
 
