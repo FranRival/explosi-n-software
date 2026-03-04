@@ -1,3 +1,54 @@
+
+
+### Nivel 0 — Base física de la explosión
+	•	- Sistema de partículas
+	•	- Dirección radial desde el centro
+	•	Velocidad inicial aleatoria
+	•	- Movimiento con vectores vx, vy
+	•	- Decaimiento de velocidad (drag)
+	•	- Tiempo de vida de cada partícula (life, age)
+	•	- Método alive() para verificar partículas activas
+
+⸻
+
+### Nivel 1 — Control estructural y artístico
+
+#### Control angular
+	•	- Más densidad hacia arriba (angular_weight)
+	•	- Explosión en abanico (fan_mask)
+	•	- Deformación tipo lágrima (tear_shape)
+	•	- Hueco central (RADIAL_HOLE)
+
+#### Curva energética no lineal
+	•	- Pico inicial fuerte
+	•	- Decaimiento exponencial
+	•	- Rebote energético (energy_curve)
+
+#### Ritmo temporal
+	•	- Delay por partícula
+	•	- Micro-oleadas internas
+	•	- Estallido secundario
+
+#### Variación radial estructural
+	•	- Anillos de expansión
+	•	- Núcleo diferenciado
+	•	- Fuego interno
+	•	- Fuego externo
+	•	- Estructura jerárquica de capas
+
+#### Otros elementos visuales
+	•	- Distorsión de forma con ruido Perlin
+	•	- Humo procedural
+	•	- Partículas secundarias de la explosión
+
+
+-----
+
+
+
+
+
+
 ### Cómo simulamos “volumen” en 2D
 
 En este MVP no usamos simulación volumétrica real ni física avanzada.  
