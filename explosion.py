@@ -112,6 +112,16 @@ FBM_SUPER_MACRO_STRENGTH = 0.55
 FBM_FINE_SCALE = 0.04
 FBM_FINE_STRENGTH = 0.35
 
+# =========================================================
+# MACROFORMA + MICRODETALLE
+# =========================================================
+
+MACRO_SHAPE_SCALE = 0.002
+MACRO_SHAPE_STRENGTH = 0.7
+
+MICRO_DETAIL_SCALE = 0.06
+MICRO_DETAIL_STRENGTH = 0.25
+
 
 # =========================================================
 # UTILIDADES
@@ -202,6 +212,25 @@ def fbm_super_macro(x, y, t):
 def fbm_fine_detail(x, y, t):
 
     return fbm_deep(x, y, t, FBM_FINE_SCALE)
+    
+    
+# =========================================================
+# MACROFORMA
+# =========================================================
+
+def macro_shape_noise(x, y, t):
+
+    return fbm(x, y, t, MACRO_SHAPE_SCALE)
+
+
+# =========================================================
+# MICRO DETALLE
+# =========================================================
+
+def micro_detail_noise(x, y, t):
+
+    return fbm_deep(x, y, t, MICRO_DETAIL_SCALE)
+    
     
     
 def energy_curve(t):
@@ -314,6 +343,24 @@ def density_field(x, y, t, base_radius):
     
     fbm_fine = fbm_fine_detail(x + 2000, y + 2000, t)
     fbm_fine *= FBM_FINE_STRENGTH
+    
+    
+    # -----------------------------
+	# macro forma
+	# -----------------------------
+
+	macro_shape = macro_shape_noise(x - 3000, y - 3000, t)
+
+	macro_shape *= MACRO_SHAPE_STRENGTH
+
+
+	# -----------------------------
+	# micro detalle
+	# -----------------------------
+
+	micro_detail = micro_detail_noise(x + 3500, y + 3500, t)
+
+	micro_detail *= MICRO_DETAIL_STRENGTH
 
     # -----------------------------
     # influencia de altura
@@ -330,7 +377,7 @@ def density_field(x, y, t, base_radius):
     # -----------------------------
     # densidad final
     # -----------------------------
-    density = base_density + noise_density + height_component + compression + fbm_value + fbm_micro + fbm_super + fbm_fine
+    density = base_density + noise_density + height_component + compression + fbm_value + fbm_micro + fbm_super + fbm_fine + macro_shape + micro_detail
     return max(0, density)
 
 
