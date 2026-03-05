@@ -387,12 +387,11 @@ def density_field(x, y, t, base_radius):
     # -----------------------------
 	# turbulencia dinámica
 	# -----------------------------
-
-	turb_x, turb_y = dynamic_turbulence(x, y, t)
-	turb_dx, turb_dy = dynamic_turbulence_detail(x, y, t)
-
-	x = x + turb_x + turb_dx
-	y = y + turb_y + turb_dy
+    turb_x, turb_y = dynamic_turbulence(x, y, t)
+    turb_dx, turb_dy = dynamic_turbulence_detail(x, y, t)
+    
+    x = x + turb_x + turb_dx
+    y = y + turb_y + turb_dy
 
     dy_lift = dy + t * DENSITY_HEIGHT_LIFT
 
