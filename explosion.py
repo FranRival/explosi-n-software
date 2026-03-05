@@ -94,6 +94,14 @@ FBM_SCALE_DETAIL = 0.02
 
 FBM_STRENGTH = 0.65
 
+# ruido fractal profundo (6-8 octavas)
+FBM_DEEP_OCTAVES = 8
+FBM_DEEP_GAIN = 0.55
+FBM_DEEP_LACUNARITY = 2.1
+
+FBM_DEEP_SCALE = 0.015
+FBM_DEEP_STRENGTH = 0.45
+
 
 # =========================================================
 # UTILIDADES
@@ -144,6 +152,34 @@ def fbm(x, y, t, scale):
     return value
     
 
+# =========================================================
+# FRACTAL BROWNIAN MOTION PROFUNDO (8 OCTAVAS)
+# =========================================================
+
+def fbm_deep(x, y, t, scale):
+
+    value = 0.0
+    amplitude = 1.0
+    frequency = scale
+
+    for i in range(FBM_DEEP_OCTAVES):
+
+        n = pnoise2(
+            x * frequency,
+            y * frequency + t * 2.0,
+            repeatx=1024,
+            repeaty=1024,
+            base=SEED + 200 + i
+        )
+
+        value += n * amplitude
+
+        frequency *= FBM_DEEP_LACUNARITY
+        amplitude *= FBM_DEEP_GAIN
+
+    return value
+    
+    
 def energy_curve(t):
     peak = math.exp(-4 * t) * ENERGY_PEAK
     rebound = ENERGY_REBOUND * math.sin(10 * t) * math.exp(-2 * t)
@@ -238,6 +274,14 @@ def density_field(x, y, t, base_radius):
     fbm_macro = fbm(x, y, t, FBM_SCALE_MACRO)
     fbm_detail = fbm(x + 500, y + 500, t, FBM_SCALE_DETAIL)
     fbm_value = (fbm_macro * 0.7 + fbm_detail * 0.3) * FBM_STRENGTH
+    
+    # -----------------------------
+	# ruido fractal profundo
+	# -----------------------------
+
+	fbm_micro = fbm_deep(x + 1200, y + 1200, t, FBM_DEEP_SCALE)
+
+	fbm_micro *= FBM_DEEP_STRENGTH
 
     # -----------------------------
     # influencia de altura
@@ -254,7 +298,7 @@ def density_field(x, y, t, base_radius):
     # -----------------------------
     # densidad final
     # -----------------------------
-    density = base_density + noise_density + height_component + compression + fbm_value
+    density = base_density + noise_density + height_component + compression + fbm_value + fbm_micro
     return max(0, density)
 
 
