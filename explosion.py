@@ -102,6 +102,16 @@ FBM_DEEP_LACUNARITY = 2.1
 FBM_DEEP_SCALE = 0.015
 FBM_DEEP_STRENGTH = 0.45
 
+# =========================================================
+# MULTI SCALE FRACTAL (ESCALAS MULTIPLES)
+# =========================================================
+
+FBM_SUPER_MACRO_SCALE = 0.0015
+FBM_SUPER_MACRO_STRENGTH = 0.55
+
+FBM_FINE_SCALE = 0.04
+FBM_FINE_STRENGTH = 0.35
+
 
 # =========================================================
 # UTILIDADES
@@ -178,6 +188,20 @@ def fbm_deep(x, y, t, scale):
         amplitude *= FBM_DEEP_GAIN
 
     return value
+    
+    
+# =========================================================
+# MULTI SCALE FRACTAL NOISE
+# =========================================================
+
+def fbm_super_macro(x, y, t):
+
+    return fbm(x, y, t, FBM_SUPER_MACRO_SCALE)
+
+
+def fbm_fine_detail(x, y, t):
+
+    return fbm_deep(x, y, t, FBM_FINE_SCALE)
     
     
 def energy_curve(t):
@@ -282,6 +306,16 @@ def density_field(x, y, t, base_radius):
     
     fbm_micro *= FBM_DEEP_STRENGTH
 
+	# -----------------------------
+	# multi scale noise
+	# -----------------------------
+
+	fbm_super = fbm_super_macro(x - 800, y - 800, t)
+	fbm_super *= FBM_SUPER_MACRO_STRENGTH
+
+	fbm_fine = fbm_fine_detail(x + 2000, y + 2000, t)
+	fbm_fine *= FBM_FINE_STRENGTH
+
     # -----------------------------
     # influencia de altura
     # -----------------------------
@@ -297,7 +331,7 @@ def density_field(x, y, t, base_radius):
     # -----------------------------
     # densidad final
     # -----------------------------
-    density = base_density + noise_density + height_component + compression + fbm_value + fbm_micro
+    density = base_density + noise_density + height_component + compression + fbm_value + fbm_micro + fbm_super + fbm_fine
     return max(0, density)
 
 
