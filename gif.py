@@ -6,7 +6,7 @@ from pathlib import Path
 # CONFIGURACION
 # ======================================
 
-carpeta = Path(r"C:\Users\dell\explosion-software\versiones-resultados\nivel 2\2. Ruido fractal avanzado\v2-2-4 - Ruido fractal avanzado - Macroforma + microdetalle")  # <-- cambia esto
+carpeta = Path(r"C:\Users\dell\explosion-software\versiones-resultados\nivel 2\4. Masa volumetrica\v4-4-3 - Masa volumetrica - Volumen aparente")  # <-- cambia esto
 
 fps = 24
 

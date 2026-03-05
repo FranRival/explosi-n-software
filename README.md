@@ -1,6 +1,6 @@
 
 
-#### Nivel 0 y 1
+### Nivel 0 y 1
 v1-1-1 - Campo de densidad - densidad continua en lugar de limites radiales
 <a href="https://imgbox.com/7Kb6GuTa" target="_blank"><img src="https://images2.imgbox.com/da/d6/7Kb6GuTa_o.gif" alt="image host"/></a>
 
@@ -13,7 +13,7 @@ v3-1-3 - Campo de densidad - Influencia de altura (ascenso de la explosion)
 v4-1-4 - Campo de densidad - compresión interna de masa
 <a href="https://imgbox.com/TDtyXqmB" target="_blank"><img src="https://images2.imgbox.com/59/72/TDtyXqmB_o.gif" alt="image host"/></a>
 
-#### Nivel 2
+### Nivel 2
 v2-2-1 - Ruido fractal avanzado - Fractal Brownian Motion (fBm)
 <a href="https://imgbox.com/OO5iXlzN" target="_blank"><img src="https://images2.imgbox.com/0f/c3/OO5iXlzN_o.gif" alt="image host"/></a>
 
@@ -28,6 +28,28 @@ v2-2-4 - Ruido fractal avanzado - Macroforma + microdetalle
 <a href="https://imgbox.com/hgP7L5gp" target="_blank"><img src="https://images2.imgbox.com/ad/e8/hgP7L5gp_o.gif" alt="image host"/></a>
 
 
+#### 3. Distorcion temporal
+
+v1-3-1 - Distorcion temporal - Evolucion del campo de densidad en el tiempo
+<a href="https://imgbox.com/1fTKb5Po" target="_blank"><img src="https://images2.imgbox.com/1b/27/1fTKb5Po_o.gif" alt="image host"/></a>
+
+v1-3-2 - Distorcion temporal - Turbulencia dinamica
+<a href="https://imgbox.com/avV4E33A" target="_blank"><img src="https://images2.imgbox.com/6d/18/avV4E33A_o.gif" alt="image host"/></a>
+
+
+#### 4. Masa volumetrica
+
+v1-4-1 - Masa volumetrica
+<a href="https://imgbox.com/3l85ukc5" target="_blank"><img src="https://images2.imgbox.com/fe/10/3l85ukc5_o.gif" alt="image host"/></a>
+
+v2-4-1 - Masa volumetrica - Formacion de bultos tipo hongo
+<a href="https://imgbox.com/vYMhdi7r" target="_blank"><img src="https://images2.imgbox.com/8a/36/vYMhdi7r_o.gif" alt="image host"/></a>
+
+v3-4-2 - Masa volumetrica - Estructura irregular interna
+<a href="https://imgbox.com/aTskBi3O" target="_blank"><img src="https://images2.imgbox.com/72/76/aTskBi3O_o.gif" alt="image host"/></a>
+
+v4-4-3 - Masa volumetrica - Volumen aparente
+<a href="https://imgbox.com/EczjX0FO" target="_blank"><img src="https://images2.imgbox.com/68/4d/EczjX0FO_o.gif" alt="image host"/></a>
 
 ---
 

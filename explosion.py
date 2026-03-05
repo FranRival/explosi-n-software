@@ -606,13 +606,13 @@ def density_field(x, y, t, base_radius):
 	# -----------------------------
 	# volumen aparente
 	# -----------------------------
-	apparent = apparent_volume(dist, base_radius)
+    apparent = apparent_volume(dist, base_radius)
 
 
     # -----------------------------
     # densidad final
     # -----------------------------
-    density = base_density + noise_density + height_component + compression + volume_mass + mushroom + internal + fbm_value + fbm_micro + fbm_super + fbm_fine + macro_shape + micro_detail
+    density = base_density + noise_density + height_component + compression + volume_mass + mushroom + internal + apparent + fbm_value + fbm_micro + fbm_super + fbm_fine + macro_shape + micro_detail
     return max(0, density)
 
 
