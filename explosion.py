@@ -173,6 +173,16 @@ INTERNAL_STRUCTURE_STRENGTH = 0.8
 INTERNAL_CAVITY_SCALE = 0.015
 INTERNAL_CAVITY_STRENGTH = 0.6
 
+
+# =========================================================
+# VOLUMEN APARENTE
+# =========================================================
+
+APPARENT_VOLUME_STRENGTH = 1.3
+APPARENT_VOLUME_POWER = 1.6
+
+APPARENT_VOLUME_RADIUS = 0.75
+
 # =========================================================
 # UTILIDADES
 # =========================================================
@@ -405,6 +415,24 @@ def internal_structure(x, y, t):
     return structure - abs(cavities)
     
     
+# =========================================================
+# VOLUMEN APARENTE
+# =========================================================
+
+def apparent_volume(dist, base_radius):
+
+    ratio = dist / base_radius
+
+    if ratio < APPARENT_VOLUME_RADIUS:
+        volume = 1 - ratio
+    else:
+        volume = 0
+
+    volume = volume ** APPARENT_VOLUME_POWER
+
+    return volume * APPARENT_VOLUME_STRENGTH
+    
+    
 def energy_curve(t):
     peak = math.exp(-4 * t) * ENERGY_PEAK
     rebound = ENERGY_REBOUND * math.sin(10 * t) * math.exp(-2 * t)
@@ -574,6 +602,13 @@ def density_field(x, y, t, base_radius):
 	# -----------------------------
     internal = internal_structure(x, y, t)
   
+
+	# -----------------------------
+	# volumen aparente
+	# -----------------------------
+	apparent = apparent_volume(dist, base_radius)
+
+
     # -----------------------------
     # densidad final
     # -----------------------------
