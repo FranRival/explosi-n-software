@@ -90,7 +90,7 @@ v2-2-4 - Ruido fractal avanzado - Macroforma + microdetalle
 	•	- Macroforma + microdetalle: 1️⃣ Perlin base + 2️⃣ fBm macro + 3️⃣ fBm detalle + 4️⃣ fBm profundo (8 octavas) + 5️⃣ multi-scale super macro + 6️⃣ multi-scale fine + 7️⃣ macroforma estructural + 8️⃣ microdetalle granular
 
 #### Distorsión temporal
-	•	- Evolución del campo de densidad en el tiempo
+	•	- Evolución del campo de densidad en el tiempo: vorticidad + 	remolinos reales + turbulencia física + ruptura de la expansión radial
 	•	- Turbulencia dinámica
 
 #### Masa volumétrica
