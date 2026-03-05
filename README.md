@@ -91,7 +91,7 @@ v2-2-4 - Ruido fractal avanzado - Macroforma + microdetalle
 
 #### Distorsión temporal
 	•	- Evolución del campo de densidad en el tiempo: vorticidad + 	remolinos reales + turbulencia física + ruptura de la expansión radial
-	•	- Turbulencia dinámica
+	•	- Turbulencia dinámica: remolinos + rotación del gas + ruptura del patrón radial + estructuras tipo hongo nuclear
 
 #### Masa volumétrica
 	•	- Formación de bultos tipo hongo
