@@ -1,7 +1,7 @@
 # ==========================
 # EJECUCION
 # C:\Users\dell\explosion_env\Scripts\python.exe C:\Users\dell\explosion-software\explosion.py
-# ==========================
+# ===============nivel2----
 
 import os
 import math
