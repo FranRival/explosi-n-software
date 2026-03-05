@@ -572,7 +572,7 @@ def density_field(x, y, t, base_radius):
     # -----------------------------
 	# estructura irregular interna
 	# -----------------------------
-	internal = internal_structure(x, y, t)
+    internal = internal_structure(x, y, t)
   
     # -----------------------------
     # densidad final
@@ -759,4 +759,4 @@ for frame in range(FRAMES):
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
 
-print("Nivel 0 + Nivel 1 + Nivel 2 (ruido fractal avanzado) generado.")
+print("Nivel 0 + Nivel 1 + Nivel 2 (Masa volumétrica) generado.")
