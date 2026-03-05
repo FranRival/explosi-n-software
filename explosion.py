@@ -94,7 +94,6 @@ def base_density_field(dist, base_radius):
         return 0
 
     density = 1 - ratio
-
     density = density ** DENSITY_FALLOFF
 
     return density
@@ -105,7 +104,6 @@ def radial_modifier(dist, base_radius):
     radial = max(0, 1 - dist / base_radius)
 
     radial = radial ** RADIAL_DENSITY_POWER
-
     radial *= RADIAL_DENSITY_WEIGHT
 
     return radial
@@ -125,6 +123,7 @@ FBM_SCALE_DETAIL = 0.02
 FBM_STRENGTH = 0.65
 
 # ruido fractal profundo (6-8 octavas)
+
 FBM_DEEP_OCTAVES = 8
 FBM_DEEP_GAIN = 0.55
 FBM_DEEP_LACUNARITY = 2.1
@@ -216,7 +215,6 @@ INTERNAL_CAVITY_STRENGTH = 0.6
 
 APPARENT_VOLUME_STRENGTH = 1.3
 APPARENT_VOLUME_POWER = 1.6
-
 APPARENT_VOLUME_RADIUS = 0.75
 
 
@@ -269,6 +267,10 @@ def fbm(x, y, t, scale):
     return value
 
 
+# =========================================================
+# FRACTAL BROWNIAN MOTION PROFUNDO (8 OCTAVAS)
+# =========================================================
+
 def fbm_deep(x, y, t, scale):
 
     value = 0.0
@@ -305,9 +307,17 @@ def fbm_fine_detail(x, y, t):
     return fbm_deep(x, y, t, FBM_FINE_SCALE)
 
 
+# =========================================================
+# MACROFORMA
+# =========================================================
+
 def macro_shape_noise(x, y, t):
     return fbm(x, y, t, MACRO_SHAPE_SCALE)
 
+
+# =========================================================
+# MICRO DETALLE
+# =========================================================
 
 def micro_detail_noise(x, y, t):
     return fbm_deep(x, y, t, MICRO_DETAIL_SCALE)
@@ -345,6 +355,8 @@ def temporal_detail(x, y, t):
 
 def dynamic_turbulence(x, y, t):
 
+    # campo base
+
     n1 = fbm(x + 8000, y + 8000, t, TURBULENCE_SCALE)
     n2 = fbm(x - 8000, y - 8000, t, TURBULENCE_SCALE)
 
@@ -377,7 +389,10 @@ def dynamic_turbulence_detail(x, y, t):
 
 def volumetric_mass(x, y, t):
 
+    # masa base
     base_mass = fbm(x + 12000, y + 12000, t, VOLUME_MASS_SCALE)
+
+    # detalle interno
     detail_mass = fbm_deep(x - 12000, y - 12000, t, VOLUME_MASS_DETAIL_SCALE)
 
     base_mass *= VOLUME_MASS_STRENGTH
@@ -392,12 +407,15 @@ def volumetric_mass(x, y, t):
 
 def mushroom_lobes(x, y, t, dist, base_radius):
 
+    # ruido base que crea lóbulos
     lobe_noise = fbm(x + 15000, y + 15000, t, MUSHROOM_SCALE)
 
+    # sesgo vertical (el hongo sube)
     vertical = (CENTER_Y - y) / HEIGHT
     vertical = max(0, vertical)
     vertical *= MUSHROOM_VERTICAL_BIAS
 
+    # región de la "cúpula" del hongo
     cap_zone = dist / base_radius
 
     if cap_zone < MUSHROOM_CAP_RADIUS:
@@ -416,12 +434,16 @@ def mushroom_lobes(x, y, t, dist, base_radius):
 
 def internal_structure(x, y, t):
 
+    # masa irregular
     structure = fbm(x + 18000, y + 18000, t, INTERNAL_STRUCTURE_SCALE)
+
+    # cavidades internas
     cavities = fbm_deep(x - 18000, y - 18000, t, INTERNAL_CAVITY_SCALE)
 
     structure *= INTERNAL_STRUCTURE_STRENGTH
     cavities *= INTERNAL_CAVITY_STRENGTH
 
+    # las cavidades restan densidad
     return structure - abs(cavities)
 
 
@@ -486,9 +508,7 @@ def density_field(x, y, t, base_radius):
     dx = x - CENTER_X
     dy = y - CENTER_Y
 
-    # -----------------------------
     # distorsión temporal
-    # -----------------------------
 
     flow_x, flow_y = temporal_flow(x, y, t)
     detail_x, detail_y = temporal_detail(x, y, t)
@@ -496,9 +516,7 @@ def density_field(x, y, t, base_radius):
     x += flow_x + detail_x
     y += flow_y + detail_y
 
-    # -----------------------------
     # turbulencia dinámica
-    # -----------------------------
 
     turb_x, turb_y = dynamic_turbulence(x, y, t)
     turb_dx, turb_dy = dynamic_turbulence_detail(x, y, t)
@@ -509,28 +527,31 @@ def density_field(x, y, t, base_radius):
     dy_lift = dy + t * DENSITY_HEIGHT_LIFT
     dist = math.sqrt(dx * dx + dy_lift * dy_lift)
 
-    # =====================================================
-    # BASE DEL CAMPO DE DENSIDAD
-    # =====================================================
+    # influencia radial
+    # densidad base
 
     base_density = base_density_field(dist, base_radius)
     radial = radial_modifier(dist, base_radius)
 
     base_density *= radial
 
-    # =====================================================
-    # CAPAS VOLUMÉTRICAS
-    # =====================================================
+    # ruido procedural
 
     noise = perlin(x, y, t, DENSITY_NOISE_SCALE)
     noise_density = noise * DENSITY_NOISE_STRENGTH
+
+    # fractal brownian motion
 
     fbm_macro = fbm(x, y, t, FBM_SCALE_MACRO)
     fbm_detail = fbm(x + 500, y + 500, t, FBM_SCALE_DETAIL)
     fbm_value = (fbm_macro * 0.7 + fbm_detail * 0.3) * FBM_STRENGTH
 
+    # ruido fractal profundo
+
     fbm_micro = fbm_deep(x + 1200, y + 1200, t, FBM_DEEP_SCALE)
     fbm_micro *= FBM_DEEP_STRENGTH
+
+    # multi scale noise
 
     fbm_super = fbm_super_macro(x - 800, y - 800, t)
     fbm_super *= FBM_SUPER_MACRO_STRENGTH
@@ -538,27 +559,41 @@ def density_field(x, y, t, base_radius):
     fbm_fine = fbm_fine_detail(x + 2000, y + 2000, t)
     fbm_fine *= FBM_FINE_STRENGTH
 
+    # macro forma
+
     macro_shape = macro_shape_noise(x - 3000, y - 3000, t)
     macro_shape *= MACRO_SHAPE_STRENGTH
+
+    # micro detalle
 
     micro_detail = micro_detail_noise(x + 3500, y + 3500, t)
     micro_detail *= MICRO_DETAIL_STRENGTH
 
+    # influencia de altura
+
     height_component = height_density(y, t)
+
+    # compresión interna
 
     compression = mass_compression(dist, base_radius)
 
+    # masa volumétrica
+
     volume_mass = volumetric_mass(x, y, t)
+
+    # bultos tipo hongo
 
     mushroom = mushroom_lobes(x, y, t, dist, base_radius)
 
+    # estructura irregular interna
+
     internal = internal_structure(x, y, t)
+
+    # volumen aparente
 
     apparent = apparent_volume(dist, base_radius)
 
-    # =====================================================
-    # DENSIDAD FINAL
-    # =====================================================
+    # densidad final
 
     density = (
         base_density
@@ -578,7 +613,6 @@ def density_field(x, y, t, base_radius):
     )
 
     return max(0, density)
-
 
 # =========================================================
 # MODIFICADOR RADIAL
