@@ -334,12 +334,11 @@ def density_field(x, y, t, base_radius):
     # -----------------------------
 	# distorsión temporal
 	# -----------------------------
-
-	flow_x, flow_y = temporal_flow(x, y, t)
-	detail_x, detail_y = temporal_detail(x, y, t)
-
-	x = x + flow_x + detail_x
-	y = y + flow_y + detail_y
+    flow_x, flow_y = temporal_flow(x, y, t)
+    detail_x, detail_y = temporal_detail(x, y, t)
+    
+    x = x + flow_x + detail_x
+    y = y + flow_y + detail_y
 
     dy_lift = dy + t * DENSITY_HEIGHT_LIFT
 
