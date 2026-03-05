@@ -278,10 +278,9 @@ def density_field(x, y, t, base_radius):
     # -----------------------------
 	# ruido fractal profundo
 	# -----------------------------
-
-	fbm_micro = fbm_deep(x + 1200, y + 1200, t, FBM_DEEP_SCALE)
-
-	fbm_micro *= FBM_DEEP_STRENGTH
+    fbm_micro = fbm_deep(x + 1200, y + 1200, t, FBM_DEEP_SCALE)
+    
+    fbm_micro *= FBM_DEEP_STRENGTH
 
     # -----------------------------
     # influencia de altura
