@@ -124,6 +124,16 @@ MICRO_DETAIL_STRENGTH = 0.25
 
 
 # =========================================================
+# DISTORSIÓN TEMPORAL (EVOLUCIÓN DEL CAMPO DE DENSIDAD)
+# =========================================================
+
+TEMPORAL_FLOW_SCALE = 0.003
+TEMPORAL_FLOW_STRENGTH = 80
+
+TEMPORAL_DETAIL_SCALE = 0.01
+TEMPORAL_DETAIL_STRENGTH = 35
+
+# =========================================================
 # UTILIDADES
 # =========================================================
 
@@ -233,6 +243,32 @@ def micro_detail_noise(x, y, t):
     
     
     
+# =========================================================
+# DISTORSIÓN TEMPORAL DEL CAMPO DE DENSIDAD
+# =========================================================
+
+def temporal_flow(x, y, t):
+
+    flow_x = fbm(x + 4000, y + 4000, t, TEMPORAL_FLOW_SCALE)
+    flow_y = fbm(x - 4000, y - 4000, t, TEMPORAL_FLOW_SCALE)
+
+    flow_x *= TEMPORAL_FLOW_STRENGTH
+    flow_y *= TEMPORAL_FLOW_STRENGTH
+
+    return flow_x, flow_y
+
+
+def temporal_detail(x, y, t):
+
+    detail_x = fbm_deep(x + 6000, y + 6000, t, TEMPORAL_DETAIL_SCALE)
+    detail_y = fbm_deep(x - 6000, y - 6000, t, TEMPORAL_DETAIL_SCALE)
+
+    detail_x *= TEMPORAL_DETAIL_STRENGTH
+    detail_y *= TEMPORAL_DETAIL_STRENGTH
+
+    return detail_x, detail_y
+    
+    
 def energy_curve(t):
     peak = math.exp(-4 * t) * ENERGY_PEAK
     rebound = ENERGY_REBOUND * math.sin(10 * t) * math.exp(-2 * t)
@@ -294,6 +330,16 @@ def density_field(x, y, t, base_radius):
 
     dx = x - CENTER_X
     dy = y - CENTER_Y
+    
+    # -----------------------------
+	# distorsión temporal
+	# -----------------------------
+
+	flow_x, flow_y = temporal_flow(x, y, t)
+	detail_x, detail_y = temporal_detail(x, y, t)
+
+	x = x + flow_x + detail_x
+	y = y + flow_y + detail_y
 
     dy_lift = dy + t * DENSITY_HEIGHT_LIFT
 
