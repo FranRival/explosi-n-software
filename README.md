@@ -95,7 +95,7 @@ v2-2-4 - Ruido fractal avanzado - Macroforma + microdetalle
 
 #### Masa volumétrica
 	•	- Formación de bultos tipo hongo: lóbulos verticales + bultos de gas caliente + estructura tipo nube nuclear
-	•	- Estructura irregular interna
+	•	- Estructura irregular interna: grumos internos + cavidades + mezcla turbulenta
 	•	- Volumen aparente
 
 ⸻
