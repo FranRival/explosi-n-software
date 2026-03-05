@@ -153,6 +153,17 @@ VOLUME_MASS_STRENGTH = 1.2
 VOLUME_MASS_DETAIL_SCALE = 0.01
 VOLUME_MASS_DETAIL_STRENGTH = 0.6
 
+# =========================================================
+# FORMACIÓN DE BULTO TIPO HONGO
+# =========================================================
+
+MUSHROOM_SCALE = 0.004
+MUSHROOM_STRENGTH = 1.1
+
+MUSHROOM_VERTICAL_BIAS = 1.6
+MUSHROOM_CAP_RADIUS = 0.65
+
+
 
 # =========================================================
 # UTILIDADES
@@ -341,6 +352,32 @@ def volumetric_mass(x, y, t):
     return base_mass + detail_mass
     
     
+# =========================================================
+# FORMACIÓN DE BULTO TIPO HONGO
+# =========================================================
+
+def mushroom_lobes(x, y, t, dist, base_radius):
+
+    # ruido base que crea lóbulos
+    lobe_noise = fbm(x + 15000, y + 15000, t, MUSHROOM_SCALE)
+
+    # sesgo vertical (el hongo sube)
+    vertical = (CENTER_Y - y) / HEIGHT
+    vertical = max(0, vertical)
+    vertical *= MUSHROOM_VERTICAL_BIAS
+
+    # región de la "cúpula" del hongo
+    cap_zone = dist / base_radius
+
+    if cap_zone < MUSHROOM_CAP_RADIUS:
+        cap_factor = 1 - cap_zone
+    else:
+        cap_factor = 0
+
+    cap_factor = cap_factor ** 2
+
+    return lobe_noise * vertical * cap_factor * MUSHROOM_STRENGTH
+    
 def energy_curve(t):
     peak = math.exp(-4 * t) * ENERGY_PEAK
     rebound = ENERGY_REBOUND * math.sin(10 * t) * math.exp(-2 * t)
@@ -498,7 +535,12 @@ def density_field(x, y, t, base_radius):
     # -----------------------------
 	# masa volumétrica
 	# -----------------------------
-    volume_mass = volumetric_mass(x, y, t)
+	volume_mass = volumetric_mass(x, y, t)
+    
+    # -----------------------------
+	# bultos tipo hongo
+	# -----------------------------
+	mushroom = mushroom_lobes(x, y, t, dist, base_radius)
   
     # -----------------------------
     # densidad final
