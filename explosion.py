@@ -235,11 +235,9 @@ def density_field(x, y, t, base_radius):
     # -----------------------------
 	# fractal brownian motion
 	# -----------------------------
-
-	fbm_macro = fbm(x, y, t, FBM_SCALE_MACRO)
-	fbm_detail = fbm(x + 500, y + 500, t, FBM_SCALE_DETAIL)
-
-	fbm_value = (fbm_macro * 0.7 + fbm_detail * 0.3) * FBM_STRENGTH
+    fbm_macro = fbm(x, y, t, FBM_SCALE_MACRO)
+    fbm_detail = fbm(x + 500, y + 500, t, FBM_SCALE_DETAIL)
+    fbm_value = (fbm_macro * 0.7 + fbm_detail * 0.3) * FBM_STRENGTH
 
     # -----------------------------
     # influencia de altura
@@ -438,4 +436,4 @@ for frame in range(FRAMES):
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
 
-print("Nivel 0 + Nivel 1 + Nivel 2 (campo de densidad) generado.")
+print("Nivel 0 + Nivel 1 + Nivel 2 (ruido fractal avanzado) generado.")
