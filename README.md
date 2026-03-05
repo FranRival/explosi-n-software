@@ -94,7 +94,7 @@ v2-2-4 - Ruido fractal avanzado - Macroforma + microdetalle
 	•	- Turbulencia dinámica: remolinos + rotación del gas + ruptura del patrón radial + estructuras tipo hongo nuclear
 
 #### Masa volumétrica
-	•	- Formación de bultos tipo hongo
+	•	- Formación de bultos tipo hongo: lóbulos verticales + bultos de gas caliente + estructura tipo nube nuclear
 	•	- Estructura irregular interna
 	•	- Volumen aparente
 
