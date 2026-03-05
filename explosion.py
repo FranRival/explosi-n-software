@@ -143,6 +143,16 @@ TURBULENCE_STRENGTH = 45
 TURBULENCE_DETAIL_SCALE = 0.02
 TURBULENCE_DETAIL_STRENGTH = 18
 
+# =========================================================
+# MASA VOLUMÉTRICA
+# =========================================================
+
+VOLUME_MASS_SCALE = 0.003
+VOLUME_MASS_STRENGTH = 1.2
+
+VOLUME_MASS_DETAIL_SCALE = 0.01
+VOLUME_MASS_DETAIL_STRENGTH = 0.6
+
 
 # =========================================================
 # UTILIDADES
@@ -313,6 +323,24 @@ def dynamic_turbulence_detail(x, y, t):
     return vx, vy
     
     
+# =========================================================
+# MASA VOLUMÉTRICA
+# =========================================================
+
+def volumetric_mass(x, y, t):
+
+    # masa base
+    base_mass = fbm(x + 12000, y + 12000, t, VOLUME_MASS_SCALE)
+
+    # detalle interno
+    detail_mass = fbm_deep(x - 12000, y - 12000, t, VOLUME_MASS_DETAIL_SCALE)
+
+    base_mass *= VOLUME_MASS_STRENGTH
+    detail_mass *= VOLUME_MASS_DETAIL_STRENGTH
+
+    return base_mass + detail_mass
+    
+    
 def energy_curve(t):
     peak = math.exp(-4 * t) * ENERGY_PEAK
     rebound = ENERGY_REBOUND * math.sin(10 * t) * math.exp(-2 * t)
@@ -466,12 +494,16 @@ def density_field(x, y, t, base_radius):
     # compresión interna
     # ---------------------
     compression = mass_compression(dist, base_radius)
-  
     
+    # -----------------------------
+	# masa volumétrica
+	# -----------------------------
+	volume_mass = volumetric_mass(x, y, t)
+  
     # -----------------------------
     # densidad final
     # -----------------------------
-    density = base_density + noise_density + height_component + compression + fbm_value + fbm_micro + fbm_super + fbm_fine + macro_shape + micro_detail
+    density = base_density + noise_density + height_component + compression + volume_mass + fbm_value + fbm_micro + fbm_super + fbm_fine + macro_shape + micro_detail
     return max(0, density)
 
 
