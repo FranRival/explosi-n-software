@@ -348,19 +348,15 @@ def density_field(x, y, t, base_radius):
     # -----------------------------
 	# macro forma
 	# -----------------------------
-
-	macro_shape = macro_shape_noise(x - 3000, y - 3000, t)
-
-	macro_shape *= MACRO_SHAPE_STRENGTH
+    macro_shape = macro_shape_noise(x - 3000, y - 3000, t)
+    macro_shape *= MACRO_SHAPE_STRENGTH
 
 
 	# -----------------------------
 	# micro detalle
 	# -----------------------------
-
-	micro_detail = micro_detail_noise(x + 3500, y + 3500, t)
-
-	micro_detail *= MICRO_DETAIL_STRENGTH
+    micro_detail = micro_detail_noise(x + 3500, y + 3500, t)
+    micro_detail *= MICRO_DETAIL_STRENGTH
 
     # -----------------------------
     # influencia de altura

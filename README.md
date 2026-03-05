@@ -1,5 +1,36 @@
 
 
+#### Nivel 0 y 1
+v1-1-1 - Campo de densidad - densidad continua en lugar de limites radiales
+<a href="https://imgbox.com/7Kb6GuTa" target="_blank"><img src="https://images2.imgbox.com/da/d6/7Kb6GuTa_o.gif" alt="image host"/></a>
+
+v2-1-2 - Campo de densidad - influencia de distancia radial
+<a href="https://imgbox.com/BKk1ivWW" target="_blank"><img src="https://images2.imgbox.com/3d/4f/BKk1ivWW_o.gif" alt="image host"/></a>
+
+v3-1-3 - Campo de densidad - Influencia de altura (ascenso de la explosion)
+<a href="https://imgbox.com/uRA1Ju5I" target="_blank"><img src="https://images2.imgbox.com/c0/c2/uRA1Ju5I_o.gif" alt="image host"/></a>
+
+v4-1-4 - Campo de densidad - compresión interna de masa
+<a href="https://imgbox.com/TDtyXqmB" target="_blank"><img src="https://images2.imgbox.com/59/72/TDtyXqmB_o.gif" alt="image host"/></a>
+
+#### Nivel 2
+v2-2-1 - Ruido fractal avanzado - Fractal Brownian Motion (fBm)
+<a href="https://imgbox.com/OO5iXlzN" target="_blank"><img src="https://images2.imgbox.com/0f/c3/OO5iXlzN_o.gif" alt="image host"/></a>
+
+v2-2-2 - Ruido fractal avanzado - 6–8 octavas de ruido
+<a href="https://imgbox.com/IjiCTUGG" target="_blank"><img src="https://images2.imgbox.com/8b/6f/IjiCTUGG_o.gif" alt="image host"/></a>
+
+
+v2-2-3 - Ruido fractal avanzado - Escalas múltiples
+<a href="https://imgbox.com/Cl9EUieX" target="_blank"><img src="https://images2.imgbox.com/35/ee/Cl9EUieX_o.gif" alt="image host"/></a>
+
+v2-2-4 - Ruido fractal avanzado - Macroforma + microdetalle
+<a href="https://imgbox.com/hgP7L5gp" target="_blank"><img src="https://images2.imgbox.com/ad/e8/hgP7L5gp_o.gif" alt="image host"/></a>
+
+
+
+---
+
 ### Nivel 0 — Base física de la explosión
 	•	- Sistema de partículas
 	•	- Dirección radial desde el centro
