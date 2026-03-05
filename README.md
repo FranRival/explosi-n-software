@@ -53,8 +53,8 @@
 	•	- Compresión interna de masa: densidad continua + influencia radial + influencia de altura + ruido procedural + compresión interna de masa
 
 #### Ruido fractal avanzado
-	•	- Fractal Brownian Motion (fBm)
-	•	- 6–8 octavas de ruido
+	•	- Fractal Brownian Motion (fBm): masas irregulares + turbulencia interna + bordes complejos + estructuras tipo hongo / volumétricas
+	•	- 6–8 octavas de ruido: macro deformación de masa + bultos tipo hongo + micro turbulencia + bordes complejos + detalle interno granular
 	•	- Escalas múltiples
 	•	- Macroforma + microdetalle
 
