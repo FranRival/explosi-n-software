@@ -163,7 +163,15 @@ MUSHROOM_STRENGTH = 1.1
 MUSHROOM_VERTICAL_BIAS = 1.6
 MUSHROOM_CAP_RADIUS = 0.65
 
+# =========================================================
+# ESTRUCTURA IRREGULAR INTERNA
+# =========================================================
 
+INTERNAL_STRUCTURE_SCALE = 0.008
+INTERNAL_STRUCTURE_STRENGTH = 0.8
+
+INTERNAL_CAVITY_SCALE = 0.015
+INTERNAL_CAVITY_STRENGTH = 0.6
 
 # =========================================================
 # UTILIDADES
@@ -378,6 +386,25 @@ def mushroom_lobes(x, y, t, dist, base_radius):
 
     return lobe_noise * vertical * cap_factor * MUSHROOM_STRENGTH
     
+# =========================================================
+# ESTRUCTURA IRREGULAR INTERNA
+# =========================================================
+
+def internal_structure(x, y, t):
+
+    # masa irregular
+    structure = fbm(x + 18000, y + 18000, t, INTERNAL_STRUCTURE_SCALE)
+
+    # cavidades internas
+    cavities = fbm_deep(x - 18000, y - 18000, t, INTERNAL_CAVITY_SCALE)
+
+    structure *= INTERNAL_STRUCTURE_STRENGTH
+    cavities *= INTERNAL_CAVITY_STRENGTH
+
+    # las cavidades restan densidad
+    return structure - abs(cavities)
+    
+    
 def energy_curve(t):
     peak = math.exp(-4 * t) * ENERGY_PEAK
     rebound = ENERGY_REBOUND * math.sin(10 * t) * math.exp(-2 * t)
@@ -541,11 +568,16 @@ def density_field(x, y, t, base_radius):
 	# bultos tipo hongo
 	# -----------------------------
     mushroom = mushroom_lobes(x, y, t, dist, base_radius)
+    
+    # -----------------------------
+	# estructura irregular interna
+	# -----------------------------
+	internal = internal_structure(x, y, t)
   
     # -----------------------------
     # densidad final
     # -----------------------------
-    density = base_density + noise_density + height_component + compression + volume_mass + fbm_value + fbm_micro + fbm_super + fbm_fine + macro_shape + micro_detail
+    density = base_density + noise_density + height_component + compression + volume_mass + mushroom + internal + fbm_value + fbm_micro + fbm_super + fbm_fine + macro_shape + micro_detail
     return max(0, density)
 
 
