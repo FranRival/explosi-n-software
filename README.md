@@ -56,7 +56,7 @@
 	•	- Fractal Brownian Motion (fBm): masas irregulares + turbulencia interna + bordes complejos + estructuras tipo hongo / volumétricas
 	•	- 6–8 octavas de ruido: macro deformación de masa + bultos tipo hongo + micro turbulencia + bordes complejos + detalle interno granular
 	•	- Escalas múltiples: 1️⃣ Perlin base + 2️⃣ fBm macro + 3️⃣ fBm detalle + 4️⃣ fBm profundo (8 octavas) + 5️⃣ super-macro deformación + 6️⃣ micro detalle fino
-	•	- Macroforma + microdetalle
+	•	- Macroforma + microdetalle: 1️⃣ Perlin base + 2️⃣ fBm macro + 3️⃣ fBm detalle + 4️⃣ fBm profundo (8 octavas) + 5️⃣ multi-scale super macro + 6️⃣ multi-scale fine + 7️⃣ macroforma estructural + 8️⃣ microdetalle granular
 
 #### Distorsión temporal
 	•	- Evolución del campo de densidad en el tiempo
