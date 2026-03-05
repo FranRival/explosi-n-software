@@ -309,12 +309,11 @@ def density_field(x, y, t, base_radius):
 	# -----------------------------
 	# multi scale noise
 	# -----------------------------
-
-	fbm_super = fbm_super_macro(x - 800, y - 800, t)
-	fbm_super *= FBM_SUPER_MACRO_STRENGTH
-
-	fbm_fine = fbm_fine_detail(x + 2000, y + 2000, t)
-	fbm_fine *= FBM_FINE_STRENGTH
+    fbm_super = fbm_super_macro(x - 800, y - 800, t)
+    fbm_super *= FBM_SUPER_MACRO_STRENGTH
+    
+    fbm_fine = fbm_fine_detail(x + 2000, y + 2000, t)
+    fbm_fine *= FBM_FINE_STRENGTH
 
     # -----------------------------
     # influencia de altura
