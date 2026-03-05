@@ -134,6 +134,17 @@ TEMPORAL_DETAIL_SCALE = 0.01
 TEMPORAL_DETAIL_STRENGTH = 35
 
 # =========================================================
+# TURBULENCIA DINÁMICA
+# =========================================================
+
+TURBULENCE_SCALE = 0.006
+TURBULENCE_STRENGTH = 45
+
+TURBULENCE_DETAIL_SCALE = 0.02
+TURBULENCE_DETAIL_STRENGTH = 18
+
+
+# =========================================================
 # UTILIDADES
 # =========================================================
 
@@ -269,6 +280,39 @@ def temporal_detail(x, y, t):
     return detail_x, detail_y
     
     
+# =========================================================
+# TURBULENCIA DINÁMICA
+# =========================================================
+
+def dynamic_turbulence(x, y, t):
+
+    # campo base
+    n1 = fbm(x + 8000, y + 8000, t, TURBULENCE_SCALE)
+    n2 = fbm(x - 8000, y - 8000, t, TURBULENCE_SCALE)
+
+    vx = -n2
+    vy = n1
+
+    vx *= TURBULENCE_STRENGTH
+    vy *= TURBULENCE_STRENGTH
+
+    return vx, vy
+
+
+def dynamic_turbulence_detail(x, y, t):
+
+    n1 = fbm_deep(x + 10000, y + 10000, t, TURBULENCE_DETAIL_SCALE)
+    n2 = fbm_deep(x - 10000, y - 10000, t, TURBULENCE_DETAIL_SCALE)
+
+    vx = -n2
+    vy = n1
+
+    vx *= TURBULENCE_DETAIL_STRENGTH
+    vy *= TURBULENCE_DETAIL_STRENGTH
+
+    return vx, vy
+    
+    
 def energy_curve(t):
     peak = math.exp(-4 * t) * ENERGY_PEAK
     rebound = ENERGY_REBOUND * math.sin(10 * t) * math.exp(-2 * t)
@@ -339,6 +383,16 @@ def density_field(x, y, t, base_radius):
     
     x = x + flow_x + detail_x
     y = y + flow_y + detail_y
+    
+    # -----------------------------
+	# turbulencia dinámica
+	# -----------------------------
+
+	turb_x, turb_y = dynamic_turbulence(x, y, t)
+	turb_dx, turb_dy = dynamic_turbulence_detail(x, y, t)
+
+	x = x + turb_x + turb_dx
+	y = y + turb_y + turb_dy
 
     dy_lift = dy + t * DENSITY_HEIGHT_LIFT
 
