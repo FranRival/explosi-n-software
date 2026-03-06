@@ -874,10 +874,10 @@ for frame in range(FRAMES):
             r, g, b = fire_color(temperature)
             
             brightness = 1.2
-
-			r = clamp(r * shade * density * brightness)
-			g = clamp(g * shade * density * brightness)
-			b = clamp(b * shade * density * brightness)
+            
+            r = clamp(r * shade * density * brightness)
+            g = clamp(g * shade * density * brightness)
+            b = clamp(b * shade * density * brightness)
             
             img[y, x] = (r, g, b, 255)
 
