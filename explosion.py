@@ -223,6 +223,10 @@ HEAT_BUOYANCY = 1.2
 DENSITY_TO_TEMPERATURE = 1.6
 TEMPERATURE_DENSITY_POWER = 1.2
 
+# difusión térmica
+THERMAL_GRADIENT_SCALE = 0.008
+THERMAL_GRADIENT_STRENGTH = 0.6
+
 # =========================================================
 # SOMBREADO VOLUMÉTRICO
 # =========================================================
@@ -657,11 +661,28 @@ def temperature_field(x, y, t, dist, base_radius, density):
     vertical = max(0, (CENTER_Y - y) / HEIGHT)
     buoyancy = vertical * HEAT_BUOYANCY
 
-    temperature = radial_temp + density_temp + heat_noise + buoyancy
+    # gradiente térmico continuo
+	gradient = thermal_gradient(x, y, t)
+
+	temperature = radial_temp + density_temp + heat_noise + buoyancy + gradient
 
     return max(0, temperature)
     
 
+
+# =========================================================
+# GRADIENTE TÉRMICO CONTINUO
+# =========================================================
+
+def thermal_gradient(x, y, t):
+
+    # difusión del calor en el fluido
+    gradient = fbm(x + 26000, y + 26000, t, THERMAL_GRADIENT_SCALE)
+
+    gradient *= THERMAL_GRADIENT_STRENGTH
+
+    return gradient
+    
 # =========================================================
 # SOMBREADO VOLUMÉTRICO
 # =========================================================

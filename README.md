@@ -1,4 +1,4 @@
-
+u
 
 ### Nivel 0 y 1
 v1-1-1 - Campo de densidad - densidad continua en lugar de limites radiales
@@ -126,7 +126,7 @@ v4-4-3 - Masa volumetrica - Volumen aparente
 
 #### Modelo térmico continuo
 	•	- Temperatura derivada de la densidad
-	•	- Gradiente térmico continuo
+	•	- Gradiente térmico continuo: núcleo blanco > amarillo > naranja > rojo > humo.
 	•	- Transición física entre núcleo y periferia
 
 #### Iluminación volumétrica falsa
