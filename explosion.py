@@ -1,4 +1,4 @@
-# ==========================
+8# ==========================
 # EJECUCION
 # C:\Users\dell\explosion_env\Scripts\python.exe C:\Users\dell\explosion-software\explosion.py
 # ===============
@@ -98,15 +98,6 @@ def base_density_field(dist, base_radius):
 
     return density
 
-
-def radial_modifier(dist, base_radius):
-
-    radial = max(0, 1 - dist / base_radius)
-
-    radial = radial ** RADIAL_DENSITY_POWER
-    radial *= RADIAL_DENSITY_WEIGHT
-
-    return radial
 
 
 # =========================================================
@@ -845,15 +836,6 @@ for frame in range(FRAMES):
                 continue
 
             density = density_field(x, y, t, outer_radius)
-            
-            temperature = temperature_field(
-    			x, y, t,
-    			dist,
-    			outer_radius,
-    			density
-			)
-            
-            shade = volumetric_shading(x, y, density)
 
             if density <= 0:
                 continue
