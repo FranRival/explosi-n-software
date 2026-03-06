@@ -1,4 +1,4 @@
-8# ==========================
+# ==========================
 # EJECUCION
 # C:\Users\dell\explosion_env\Scripts\python.exe C:\Users\dell\explosion-software\explosion.py
 # ===============
@@ -662,9 +662,9 @@ def temperature_field(x, y, t, dist, base_radius, density):
     buoyancy = vertical * HEAT_BUOYANCY
 
     # gradiente térmico continuo
-	gradient = thermal_gradient(x, y, t)
-
-	temperature = radial_temp + density_temp + heat_noise + buoyancy + gradient
+    gradient = thermal_gradient(x, y, t)
+    
+    temperature = radial_temp + density_temp + heat_noise + buoyancy + gradient
 
     return max(0, temperature)
     
