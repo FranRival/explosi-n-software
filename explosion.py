@@ -227,6 +227,11 @@ TEMPERATURE_DENSITY_POWER = 1.2
 THERMAL_GRADIENT_SCALE = 0.008
 THERMAL_GRADIENT_STRENGTH = 0.6
 
+# transición núcleo → periferia
+THERMAL_TRANSITION_RADIUS = 0.65
+THERMAL_TRANSITION_POWER = 2.0
+THERMAL_COOLING_RATE = 0.7
+
 # =========================================================
 # SOMBREADO VOLUMÉTRICO
 # =========================================================
@@ -664,7 +669,15 @@ def temperature_field(x, y, t, dist, base_radius, density):
     # gradiente térmico continuo
     gradient = thermal_gradient(x, y, t)
     
-    temperature = radial_temp + density_temp + heat_noise + buoyancy + gradient
+    transition = thermal_transition(dist, base_radius)
+
+	temperature = (
+    radial_temp
+    	+ density_temp
+		+ heat_noise
+        + buoyancy
+    	+ gradient
+	) * transition
 
     return max(0, temperature)
     
@@ -682,6 +695,30 @@ def thermal_gradient(x, y, t):
     gradient *= THERMAL_GRADIENT_STRENGTH
 
     return gradient
+    
+
+# =========================================================
+# TRANSICIÓN TÉRMICA NÚCLEO → PERIFERIA
+# =========================================================
+
+def thermal_transition(dist, base_radius):
+
+    ratio = dist / (base_radius + 1e-5)
+
+    if ratio > 1:
+        return 0
+
+    # región del núcleo
+    if ratio < THERMAL_TRANSITION_RADIUS:
+        core = 1 - ratio / THERMAL_TRANSITION_RADIUS
+        core = core ** THERMAL_TRANSITION_POWER
+        return core
+
+    # región de enfriamiento
+    outer = (1 - ratio)
+    outer = outer ** THERMAL_COOLING_RATE
+
+    return outer
     
 # =========================================================
 # SOMBREADO VOLUMÉTRICO
