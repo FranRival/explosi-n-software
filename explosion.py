@@ -628,6 +628,46 @@ def radial_modifier(dist, base_radius):
 
     return radial
     
+
+# =========================================================
+# CURVA DE ENERGÍA DE LA EXPLOSIÓN
+# =========================================================
+
+def energy_curve(t):
+
+    peak = math.exp(-4 * t) * ENERGY_PEAK
+    rebound = ENERGY_REBOUND * math.sin(10 * t) * math.exp(-2 * t)
+
+    return peak + rebound
+
+
+# =========================================================
+# MÁSCARA ANGULAR (FORMA DE ABANICO)
+# =========================================================
+
+def fan_mask(angle):
+
+    return abs(angle) < FAN_OPENING
+
+
+# =========================================================
+# PESO ANGULAR (SESGO HACIA ARRIBA)
+# =========================================================
+
+def angular_weight(angle):
+
+    up = (math.sin(angle) + 1) * 0.5
+    return 1 + (up * (ANGULAR_BIAS_UP - 1))
+
+
+# =========================================================
+# FORMA DE DESGARRO
+# =========================================================
+
+def tear_shape(angle):
+
+    return 1 + (math.sin(angle) * 0.35 * TEAR_FACTOR)
+
 # =========================================================
 # PARTICULAS
 # =========================================================
@@ -683,7 +723,6 @@ for frame in range(FRAMES):
     dt = DURATION / FRAMES
 
     img = np.zeros((HEIGHT, WIDTH, 4), dtype=np.uint8)
-
     base_radius = BASE_SPEED * t * energy_curve(t)
 
     core_radius = RADIUS_CORE + base_radius
