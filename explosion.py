@@ -1,7 +1,7 @@
 # ==========================
 # EJECUCION
 # C:\Users\dell\explosion_env\Scripts\python.exe C:\Users\dell\explosion-software\explosion.py
-# ==========================
+# ===============
 
 import os
 import math
@@ -81,6 +81,34 @@ HEIGHT_DENSITY_POWER = 1.4
 MASS_COMPRESSION = 1.8
 MASS_CORE_RADIUS = 0.35
 
+
+# =========================================================
+# CAMPO DE DENSIDAD BASE
+# =========================================================
+
+def base_density_field(dist, base_radius):
+
+    ratio = dist / base_radius
+
+    if ratio >= 1:
+        return 0
+
+    density = 1 - ratio
+    density = density ** DENSITY_FALLOFF
+
+    return density
+
+
+def radial_modifier(dist, base_radius):
+
+    radial = max(0, 1 - dist / base_radius)
+
+    radial = radial ** RADIAL_DENSITY_POWER
+    radial *= RADIAL_DENSITY_WEIGHT
+
+    return radial
+
+
 # =========================================================
 # RUIDO FRACTAL AVANZADO (fBm)
 # =========================================================
@@ -95,12 +123,14 @@ FBM_SCALE_DETAIL = 0.02
 FBM_STRENGTH = 0.65
 
 # ruido fractal profundo (6-8 octavas)
+
 FBM_DEEP_OCTAVES = 8
 FBM_DEEP_GAIN = 0.55
 FBM_DEEP_LACUNARITY = 2.1
 
 FBM_DEEP_SCALE = 0.015
 FBM_DEEP_STRENGTH = 0.45
+
 
 # =========================================================
 # MULTI SCALE FRACTAL (ESCALAS MULTIPLES)
@@ -111,6 +141,7 @@ FBM_SUPER_MACRO_STRENGTH = 0.55
 
 FBM_FINE_SCALE = 0.04
 FBM_FINE_STRENGTH = 0.35
+
 
 # =========================================================
 # MACROFORMA + MICRODETALLE
@@ -133,6 +164,7 @@ TEMPORAL_FLOW_STRENGTH = 80
 TEMPORAL_DETAIL_SCALE = 0.01
 TEMPORAL_DETAIL_STRENGTH = 35
 
+
 # =========================================================
 # TURBULENCIA DINÁMICA
 # =========================================================
@@ -142,6 +174,7 @@ TURBULENCE_STRENGTH = 45
 
 TURBULENCE_DETAIL_SCALE = 0.02
 TURBULENCE_DETAIL_STRENGTH = 18
+
 
 # =========================================================
 # MASA VOLUMÉTRICA
@@ -153,6 +186,7 @@ VOLUME_MASS_STRENGTH = 1.2
 VOLUME_MASS_DETAIL_SCALE = 0.01
 VOLUME_MASS_DETAIL_STRENGTH = 0.6
 
+
 # =========================================================
 # FORMACIÓN DE BULTO TIPO HONGO
 # =========================================================
@@ -162,6 +196,7 @@ MUSHROOM_STRENGTH = 1.1
 
 MUSHROOM_VERTICAL_BIAS = 1.6
 MUSHROOM_CAP_RADIUS = 0.65
+
 
 # =========================================================
 # ESTRUCTURA IRREGULAR INTERNA
@@ -180,8 +215,8 @@ INTERNAL_CAVITY_STRENGTH = 0.6
 
 APPARENT_VOLUME_STRENGTH = 1.3
 APPARENT_VOLUME_POWER = 1.6
-
 APPARENT_VOLUME_RADIUS = 0.75
+
 
 # =========================================================
 # UTILIDADES
@@ -202,8 +237,8 @@ def perlin(x, y, t, scale):
         repeaty=1024,
         base=SEED
     )
-    
-    
+
+
 # =========================================================
 # FRACTAL BROWNIAN MOTION
 # =========================================================
@@ -230,7 +265,7 @@ def fbm(x, y, t, scale):
         amplitude *= FBM_GAIN
 
     return value
-    
+
 
 # =========================================================
 # FRACTAL BROWNIAN MOTION PROFUNDO (8 OCTAVAS)
@@ -258,28 +293,25 @@ def fbm_deep(x, y, t, scale):
         amplitude *= FBM_DEEP_GAIN
 
     return value
-    
-    
+
+
 # =========================================================
 # MULTI SCALE FRACTAL NOISE
 # =========================================================
 
 def fbm_super_macro(x, y, t):
-
     return fbm(x, y, t, FBM_SUPER_MACRO_SCALE)
 
 
 def fbm_fine_detail(x, y, t):
-
     return fbm_deep(x, y, t, FBM_FINE_SCALE)
-    
-    
+
+
 # =========================================================
 # MACROFORMA
 # =========================================================
 
 def macro_shape_noise(x, y, t):
-
     return fbm(x, y, t, MACRO_SHAPE_SCALE)
 
 
@@ -288,11 +320,9 @@ def macro_shape_noise(x, y, t):
 # =========================================================
 
 def micro_detail_noise(x, y, t):
-
     return fbm_deep(x, y, t, MICRO_DETAIL_SCALE)
-    
-    
-    
+
+
 # =========================================================
 # DISTORSIÓN TEMPORAL DEL CAMPO DE DENSIDAD
 # =========================================================
@@ -317,8 +347,8 @@ def temporal_detail(x, y, t):
     detail_y *= TEMPORAL_DETAIL_STRENGTH
 
     return detail_x, detail_y
-    
-    
+
+
 # =========================================================
 # TURBULENCIA DINÁMICA
 # =========================================================
@@ -326,6 +356,7 @@ def temporal_detail(x, y, t):
 def dynamic_turbulence(x, y, t):
 
     # campo base
+
     n1 = fbm(x + 8000, y + 8000, t, TURBULENCE_SCALE)
     n2 = fbm(x - 8000, y - 8000, t, TURBULENCE_SCALE)
 
@@ -350,8 +381,8 @@ def dynamic_turbulence_detail(x, y, t):
     vy *= TURBULENCE_DETAIL_STRENGTH
 
     return vx, vy
-    
-    
+
+
 # =========================================================
 # MASA VOLUMÉTRICA
 # =========================================================
@@ -368,8 +399,8 @@ def volumetric_mass(x, y, t):
     detail_mass *= VOLUME_MASS_DETAIL_STRENGTH
 
     return base_mass + detail_mass
-    
-    
+
+
 # =========================================================
 # FORMACIÓN DE BULTO TIPO HONGO
 # =========================================================
@@ -395,7 +426,8 @@ def mushroom_lobes(x, y, t, dist, base_radius):
     cap_factor = cap_factor ** 2
 
     return lobe_noise * vertical * cap_factor * MUSHROOM_STRENGTH
-    
+
+
 # =========================================================
 # ESTRUCTURA IRREGULAR INTERNA
 # =========================================================
@@ -413,8 +445,8 @@ def internal_structure(x, y, t):
 
     # las cavidades restan densidad
     return structure - abs(cavities)
-    
-    
+
+
 # =========================================================
 # VOLUMEN APARENTE
 # =========================================================
@@ -431,25 +463,6 @@ def apparent_volume(dist, base_radius):
     volume = volume ** APPARENT_VOLUME_POWER
 
     return volume * APPARENT_VOLUME_STRENGTH
-    
-    
-def energy_curve(t):
-    peak = math.exp(-4 * t) * ENERGY_PEAK
-    rebound = ENERGY_REBOUND * math.sin(10 * t) * math.exp(-2 * t)
-    return peak + rebound
-
-
-def angular_weight(angle):
-    up = (math.sin(angle) + 1) * 0.5
-    return 1 + (up * (ANGULAR_BIAS_UP - 1))
-
-
-def fan_mask(angle):
-    return abs(angle) < FAN_OPENING
-
-
-def tear_shape(angle):
-    return 1 + (math.sin(angle) * 0.35 * TEAR_FACTOR)
 
 
 # =========================================================
@@ -461,7 +474,6 @@ def height_density(y, t):
     lift = t * DENSITY_HEIGHT_LIFT
 
     height_factor = (CENTER_Y - y + lift) / HEIGHT
-
     height_factor = max(0, height_factor)
 
     height_factor = height_factor ** HEIGHT_DENSITY_POWER
@@ -480,12 +492,13 @@ def mass_compression(dist, base_radius):
     if dist < core_limit:
 
         compression = 1 - (dist / core_limit)
-
         compression = compression ** MASS_COMPRESSION
 
         return compression
 
     return 0
+
+
 # =========================================================
 # CAMPO DE DENSIDAD
 # =========================================================
@@ -494,127 +507,166 @@ def density_field(x, y, t, base_radius):
 
     dx = x - CENTER_X
     dy = y - CENTER_Y
-    
-    # -----------------------------
-	# distorsión temporal
-	# -----------------------------
+
+    # distorsión temporal
+
     flow_x, flow_y = temporal_flow(x, y, t)
     detail_x, detail_y = temporal_detail(x, y, t)
-    
-    x = x + flow_x + detail_x
-    y = y + flow_y + detail_y
-    
-    # -----------------------------
-	# turbulencia dinámica
-	# -----------------------------
+
+    x += flow_x + detail_x
+    y += flow_y + detail_y
+
+    # turbulencia dinámica
+
     turb_x, turb_y = dynamic_turbulence(x, y, t)
     turb_dx, turb_dy = dynamic_turbulence_detail(x, y, t)
-    
-    x = x + turb_x + turb_dx
-    y = y + turb_y + turb_dy
+
+    x += turb_x + turb_dx
+    y += turb_y + turb_dy
 
     dy_lift = dy + t * DENSITY_HEIGHT_LIFT
-
     dist = math.sqrt(dx * dx + dy_lift * dy_lift)
 
-    # -----------------------------
     # influencia radial
-    # -----------------------------
-
-    radial = max(0, 1 - dist / base_radius)
-    radial = radial ** RADIAL_DENSITY_POWER
-    radial *= RADIAL_DENSITY_WEIGHT
-
-    # -----------------------------
     # densidad base
-    # -----------------------------
 
-    base_density = radial ** DENSITY_FALLOFF
+    base_density = base_density_field(dist, base_radius)
+    radial = radial_modifier(dist, base_radius)
 
-    # -----------------------------
+    base_density *= radial
+
     # ruido procedural
-    # -----------------------------
 
     noise = perlin(x, y, t, DENSITY_NOISE_SCALE)
     noise_density = noise * DENSITY_NOISE_STRENGTH
-    
-    
-    # -----------------------------
-	# fractal brownian motion
-	# -----------------------------
+
+    # fractal brownian motion
+
     fbm_macro = fbm(x, y, t, FBM_SCALE_MACRO)
     fbm_detail = fbm(x + 500, y + 500, t, FBM_SCALE_DETAIL)
     fbm_value = (fbm_macro * 0.7 + fbm_detail * 0.3) * FBM_STRENGTH
-    
-    # -----------------------------
-	# ruido fractal profundo
-	# -----------------------------
+
+    # ruido fractal profundo
+
     fbm_micro = fbm_deep(x + 1200, y + 1200, t, FBM_DEEP_SCALE)
-    
     fbm_micro *= FBM_DEEP_STRENGTH
 
-	# -----------------------------
-	# multi scale noise
-	# -----------------------------
+    # multi scale noise
+
     fbm_super = fbm_super_macro(x - 800, y - 800, t)
     fbm_super *= FBM_SUPER_MACRO_STRENGTH
-    
+
     fbm_fine = fbm_fine_detail(x + 2000, y + 2000, t)
     fbm_fine *= FBM_FINE_STRENGTH
-    
-    
-    # -----------------------------
-	# macro forma
-	# -----------------------------
+
+    # macro forma
+
     macro_shape = macro_shape_noise(x - 3000, y - 3000, t)
     macro_shape *= MACRO_SHAPE_STRENGTH
 
+    # micro detalle
 
-	# -----------------------------
-	# micro detalle
-	# -----------------------------
     micro_detail = micro_detail_noise(x + 3500, y + 3500, t)
     micro_detail *= MICRO_DETAIL_STRENGTH
 
-    # -----------------------------
     # influencia de altura
-    # -----------------------------
 
     height_component = height_density(y, t)
 
-	# ----------------------
     # compresión interna
-    # ---------------------
-    compression = mass_compression(dist, base_radius)
-    
-    # -----------------------------
-	# masa volumétrica
-	# -----------------------------
-    volume_mass = volumetric_mass(x, y, t)
-    
-    # -----------------------------
-	# bultos tipo hongo
-	# -----------------------------
-    mushroom = mushroom_lobes(x, y, t, dist, base_radius)
-    
-    # -----------------------------
-	# estructura irregular interna
-	# -----------------------------
-    internal = internal_structure(x, y, t)
-  
 
-	# -----------------------------
-	# volumen aparente
-	# -----------------------------
+    compression = mass_compression(dist, base_radius)
+
+    # masa volumétrica
+
+    volume_mass = volumetric_mass(x, y, t)
+
+    # bultos tipo hongo
+
+    mushroom = mushroom_lobes(x, y, t, dist, base_radius)
+
+    # estructura irregular interna
+
+    internal = internal_structure(x, y, t)
+
+    # volumen aparente
+
     apparent = apparent_volume(dist, base_radius)
 
-
-    # -----------------------------
     # densidad final
-    # -----------------------------
-    density = base_density + noise_density + height_component + compression + volume_mass + mushroom + internal + apparent + fbm_value + fbm_micro + fbm_super + fbm_fine + macro_shape + micro_detail
+
+    density = (
+        base_density
+        + noise_density
+        + height_component
+        + compression
+        + volume_mass
+        + mushroom
+        + internal
+        + apparent
+        + fbm_value
+        + fbm_micro
+        + fbm_super
+        + fbm_fine
+        + macro_shape
+        + micro_detail
+    )
+
     return max(0, density)
 
+# =========================================================
+# MODIFICADOR RADIAL
+# =========================================================
+
+def radial_modifier(dist, base_radius):
+
+    radial = max(0, 1 - dist / base_radius)
+
+    radial = radial ** RADIAL_DENSITY_POWER
+
+    radial *= RADIAL_DENSITY_WEIGHT
+
+    return radial
+    
+
+# =========================================================
+# CURVA DE ENERGÍA DE LA EXPLOSIÓN
+# =========================================================
+
+def energy_curve(t):
+
+    peak = math.exp(-4 * t) * ENERGY_PEAK
+    rebound = ENERGY_REBOUND * math.sin(10 * t) * math.exp(-2 * t)
+
+    return peak + rebound
+
+
+# =========================================================
+# MÁSCARA ANGULAR (FORMA DE ABANICO)
+# =========================================================
+
+def fan_mask(angle):
+
+    return abs(angle) < FAN_OPENING
+
+
+# =========================================================
+# PESO ANGULAR (SESGO HACIA ARRIBA)
+# =========================================================
+
+def angular_weight(angle):
+
+    up = (math.sin(angle) + 1) * 0.5
+    return 1 + (up * (ANGULAR_BIAS_UP - 1))
+
+
+# =========================================================
+# FORMA DE DESGARRO
+# =========================================================
+
+def tear_shape(angle):
+
+    return 1 + (math.sin(angle) * 0.35 * TEAR_FACTOR)
 
 # =========================================================
 # PARTICULAS
@@ -671,7 +723,6 @@ for frame in range(FRAMES):
     dt = DURATION / FRAMES
 
     img = np.zeros((HEIGHT, WIDTH, 4), dtype=np.uint8)
-
     base_radius = BASE_SPEED * t * energy_curve(t)
 
     core_radius = RADIUS_CORE + base_radius
@@ -794,4 +845,4 @@ for frame in range(FRAMES):
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
 
-print("Nivel 0 + Nivel 1 + Nivel 2 (Masa volumétrica) generado.")
+print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 (Modelo térmico continuo) generado.")
