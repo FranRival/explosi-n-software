@@ -217,6 +217,27 @@ APPARENT_VOLUME_STRENGTH = 1.3
 APPARENT_VOLUME_POWER = 1.6
 APPARENT_VOLUME_RADIUS = 0.75
 
+# =========================================================
+# NIVEL 3 — MODELO TÉRMICO
+# =========================================================
+
+TEMPERATURE_CORE = 1.8
+TEMPERATURE_DECAY = 1.4
+TEMPERATURE_NOISE_SCALE = 0.01
+TEMPERATURE_NOISE_STRENGTH = 0.35
+
+HEAT_BUOYANCY = 1.2
+
+# =========================================================
+# SOMBREADO VOLUMÉTRICO
+# =========================================================
+
+LIGHT_DIR_X = -0.6
+LIGHT_DIR_Y = -0.8
+
+SHADOW_STRENGTH = 0.7
+SCATTER_STRENGTH = 0.5
+ABSORPTION = 0.6
 
 # =========================================================
 # UTILIDADES
@@ -615,6 +636,86 @@ def density_field(x, y, t, base_radius):
     return max(0, density)
 
 # =========================================================
+# CAMPO DE TEMPERATURA
+# =========================================================
+
+def temperature_field(x, y, t, dist, base_radius, density):
+
+    # temperatura base decae con distancia
+    r = dist / base_radius
+
+    if r > 1:
+        return 0
+
+    base_temp = (1 - r) ** TEMPERATURE_DECAY
+    base_temp *= TEMPERATURE_CORE
+
+    # ruido térmico
+    heat_noise = fbm(x + 21000, y + 21000, t, TEMPERATURE_NOISE_SCALE)
+    heat_noise *= TEMPERATURE_NOISE_STRENGTH
+
+    # el calor sube
+    vertical = max(0, (CENTER_Y - y) / HEIGHT)
+    buoyancy = vertical * HEAT_BUOYANCY
+
+    temperature = (base_temp + heat_noise + buoyancy) * density
+
+    return max(0, temperature)
+    
+
+# =========================================================
+# SOMBREADO VOLUMÉTRICO
+# =========================================================
+
+def volumetric_shading(x, y, density):
+
+    # aproximación de gradiente
+    d_dx = density
+    d_dy = density
+
+    normal_x = d_dx
+    normal_y = d_dy
+
+    length = math.sqrt(normal_x * normal_x + normal_y * normal_y) + 1e-5
+
+    normal_x /= length
+    normal_y /= length
+
+    # iluminación direccional
+    light = normal_x * LIGHT_DIR_X + normal_y * LIGHT_DIR_Y
+    light = max(0, light)
+
+    shadow = (1 - light) * SHADOW_STRENGTH
+
+    scatter = density * SCATTER_STRENGTH
+
+    shade = light + scatter - shadow * ABSORPTION
+
+    return max(0, shade)
+    
+    
+# =========================================================
+# COLOR FÍSICO DE FUEGO
+# =========================================================
+
+def fire_color(temperature):
+
+    if temperature > 1.2:
+        return 255, 255, 255
+
+    elif temperature > 0.9:
+        return 255, 220, 120
+
+    elif temperature > 0.6:
+        return 255, 150, 60
+
+    elif temperature > 0.3:
+        return 200, 70, 30
+
+    else:
+        return 120, 40, 20
+        
+# =========================================================
 # MODIFICADOR RADIAL
 # =========================================================
 
@@ -744,6 +845,15 @@ for frame in range(FRAMES):
                 continue
 
             density = density_field(x, y, t, outer_radius)
+            
+            temperature = temperature_field(
+    			x, y, t,
+    			dist,
+    			outer_radius,
+    			density
+			)
+
+			shade = volumetric_shading(x, y, density)
 
             if density <= 0:
                 continue
@@ -762,34 +872,22 @@ for frame in range(FRAMES):
             if dist > final_radius:
                 continue
 
-            if dist < core_radius * distortion:
+            temperature = temperature_field(
+    			x, y, t,
+    			dist,
+    			outer_radius,
+    			density
+			)
 
-                fade = 1 - (dist / (core_radius * distortion))
-                intensity = clamp(255 * fade * INTENSITY_CORE * density)
+			shade = volumetric_shading(x, y, density)
 
-                img[y, x] = (intensity, intensity, intensity, 255)
+			r, g, b = fire_color(temperature)
 
-            elif dist < inner_radius * distortion:
+			r = clamp(r * shade * density)
+			g = clamp(g * shade * density)
+			b = clamp(b * shade * density)
 
-                fade = 1 - (dist / (inner_radius * distortion))
-
-                img[y, x] = (
-                    clamp(255 * fade * density),
-                    clamp(200 * fade * density),
-                    clamp(70 * fade * density),
-                    255
-                )
-
-            else:
-
-                fade = 1 - (dist / final_radius)
-
-                img[y, x] = (
-                    clamp(200 * fade * density),
-                    clamp(60 * fade * density),
-                    clamp(20 * fade * density),
-                    255
-                )
+			img[y, x] = (r, g, b, 255)
 
     if t > SECONDARY_BURST_TIME:
 
