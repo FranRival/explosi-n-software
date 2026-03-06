@@ -852,8 +852,8 @@ for frame in range(FRAMES):
     			outer_radius,
     			density
 			)
-
-			shade = volumetric_shading(x, y, density)
+            
+            shade = volumetric_shading(x, y, density)
 
             if density <= 0:
                 continue
@@ -878,16 +878,16 @@ for frame in range(FRAMES):
     			outer_radius,
     			density
 			)
-
-			shade = volumetric_shading(x, y, density)
-
-			r, g, b = fire_color(temperature)
-
-			r = clamp(r * shade * density)
-			g = clamp(g * shade * density)
-			b = clamp(b * shade * density)
-
-			img[y, x] = (r, g, b, 255)
+            
+            shade = volumetric_shading(x, y, density)
+            
+            r, g, b = fire_color(temperature)
+            
+            r = clamp(r * shade * density)
+            g = clamp(g * shade * density)
+            b = clamp(b * shade * density)
+            
+            img[y, x] = (r, g, b, 255)
 
     if t > SECONDARY_BURST_TIME:
 
