@@ -219,6 +219,10 @@ TEMPERATURE_NOISE_STRENGTH = 0.35
 
 HEAT_BUOYANCY = 1.2
 
+# relación densidad → temperatura
+DENSITY_TO_TEMPERATURE = 1.6
+TEMPERATURE_DENSITY_POWER = 1.2
+
 # =========================================================
 # SOMBREADO VOLUMÉTRICO
 # =========================================================
@@ -630,26 +634,30 @@ def density_field(x, y, t, base_radius):
 # CAMPO DE TEMPERATURA
 # =========================================================
 
+
 def temperature_field(x, y, t, dist, base_radius, density):
 
-    # temperatura base decae con distancia
+    # temperatura base radial
     r = dist / (base_radius + 1e-5)
 
     if r > 1:
         return 0
 
-    base_temp = (1 - r) ** TEMPERATURE_DECAY
-    base_temp *= TEMPERATURE_CORE
+    radial_temp = (1 - r) ** TEMPERATURE_DECAY
+    radial_temp *= TEMPERATURE_CORE
+
+    # temperatura derivada de la densidad
+    density_temp = (density ** TEMPERATURE_DENSITY_POWER) * DENSITY_TO_TEMPERATURE
 
     # ruido térmico
     heat_noise = fbm(x + 21000, y + 21000, t, TEMPERATURE_NOISE_SCALE)
     heat_noise *= TEMPERATURE_NOISE_STRENGTH
 
-    # el calor sube
+    # flotabilidad del calor
     vertical = max(0, (CENTER_Y - y) / HEIGHT)
     buoyancy = vertical * HEAT_BUOYANCY
 
-    temperature = (base_temp + heat_noise + buoyancy) * density
+    temperature = radial_temp + density_temp + heat_noise + buoyancy
 
     return max(0, temperature)
     
