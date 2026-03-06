@@ -633,7 +633,7 @@ def density_field(x, y, t, base_radius):
 def temperature_field(x, y, t, dist, base_radius, density):
 
     # temperatura base decae con distancia
-    r = dist / base_radius
+    r = dist / (base_radius + 1e-5)
 
     if r > 1:
         return 0
@@ -865,9 +865,11 @@ for frame in range(FRAMES):
             
             r, g, b = fire_color(temperature)
             
-            r = clamp(r * shade * density)
-            g = clamp(g * shade * density)
-            b = clamp(b * shade * density)
+            brightness = 1.2
+
+			r = clamp(r * shade * density * brightness)
+			g = clamp(g * shade * density * brightness)
+			b = clamp(b * shade * density * brightness)
             
             img[y, x] = (r, g, b, 255)
 
