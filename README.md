@@ -127,7 +127,7 @@ v4-4-3 - Masa volumetrica - Volumen aparente
 #### Modelo térmico continuo
 	•	- Temperatura derivada de la densidad
 	•	- Gradiente térmico continuo: núcleo blanco > amarillo > naranja > rojo > humo.
-	•	- Transición física entre núcleo y periferia
+	•	- Transición física entre núcleo y periferia: núcleo blanco > amarillo brillante > naranja > rojo oscuro > humo
 
 #### Iluminación volumétrica falsa
 	•	- Cálculo de gradiente de densidad
