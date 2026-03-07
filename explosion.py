@@ -683,7 +683,6 @@ def temperature_field(x, y, t, dist, base_radius, density):
     gradient = thermal_gradient(x, y, t)
     
     transition = thermal_transition(dist, base_radius)
-    
     temperature = (
         radial_temp
     	+ density_temp
@@ -1002,7 +1001,7 @@ for frame in range(FRAMES):
             brightness = 1.2
             
             light_factor = shade + volume_light
-        
+            
             r = clamp(r * light_factor * density * brightness)
             g = clamp(g * light_factor * density * brightness)
             b = clamp(b * light_factor * density * brightness)
