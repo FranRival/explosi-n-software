@@ -670,9 +670,9 @@ def temperature_field(x, y, t, dist, base_radius, density):
     gradient = thermal_gradient(x, y, t)
     
     transition = thermal_transition(dist, base_radius)
-
-	temperature = (
-    radial_temp
+    
+    temperature = (
+        radial_temp
     	+ density_temp
 		+ heat_noise
         + buoyancy
