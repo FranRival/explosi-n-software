@@ -244,6 +244,15 @@ SCATTER_STRENGTH = 0.5
 ABSORPTION = 0.6
 
 # =========================================================
+# ILUMINACIÓN VOLUMÉTRICA FALSA
+# =========================================================
+
+VOLUME_LIGHT_STRENGTH = 0.9
+VOLUME_LIGHT_FALLOFF = 1.8
+VOLUME_LIGHT_RADIUS = 0.7
+
+
+# =========================================================
 # UTILIDADES
 # =========================================================
 
@@ -751,6 +760,28 @@ def volumetric_shading(x, y, density):
     return max(0, shade)
     
     
+
+
+# =========================================================
+# ILUMINACIÓN VOLUMÉTRICA FALSA
+# =========================================================
+
+def fake_volumetric_light(dist, base_radius, density):
+
+    ratio = dist / (base_radius + 1e-5)
+
+    if ratio > 1:
+        return 0
+
+    # intensidad cerca del núcleo
+    core_light = max(0, 1 - ratio / VOLUME_LIGHT_RADIUS)
+
+    core_light = core_light ** VOLUME_LIGHT_FALLOFF
+
+    # la luz depende también de la densidad del gas
+    light = core_light * density * VOLUME_LIGHT_STRENGTH
+
+    return light
 # =========================================================
 # COLOR FÍSICO DE FUEGO
 # =========================================================
@@ -929,13 +960,17 @@ for frame in range(FRAMES):
             
             shade = volumetric_shading(x, y, density)
             
+            volume_light = fake_volumetric_light(dist, outer_radius, density)
+            
             r, g, b = fire_color(temperature)
             
             brightness = 1.2
             
-            r = clamp(r * shade * density * brightness)
-            g = clamp(g * shade * density * brightness)
-            b = clamp(b * shade * density * brightness)
+            light_factor = shade + volume_light
+
+			r = clamp(r * light_factor * density * brightness)
+			g = clamp(g * light_factor * density * brightness)
+			b = clamp(b * light_factor * density * brightness)
             
             img[y, x] = (r, g, b, 255)
 
