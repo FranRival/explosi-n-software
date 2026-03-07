@@ -773,6 +773,24 @@ def density_normal(x, y, t, base_radius):
 
     return nx, ny
     
+
+# =========================================================
+# DIRECCIÓN DE LUZ SIMULADA (DESDE EL NÚCLEO)
+# =========================================================
+
+def simulated_light_direction(x, y):
+
+    lx = x - CENTER_X
+    ly = y - CENTER_Y
+
+    length = math.sqrt(lx * lx + ly * ly) + 1e-5
+
+    lx /= length
+    ly /= length
+
+    return lx, ly
+    
+    
 # =========================================================
 # SOMBREADO VOLUMÉTRICO
 # =========================================================
@@ -782,14 +800,14 @@ def volumetric_shading(x, y, t, base_radius, density):
 
     normal_x, normal_y = density_normal(x, y, t, base_radius)
 
-    # iluminación direccional
-    light = normal_x * LIGHT_DIR_X + normal_y * LIGHT_DIR_Y
+    light_x, light_y = simulated_light_direction(x, y)
+
+    # iluminación direccional simulada
+    light = normal_x * light_x + normal_y * light_y
     light = max(0, light)
 
-    # sombra volumétrica
     shadow = (1 - light) * SHADOW_STRENGTH
 
-    # dispersión interna del gas
     scatter = density * SCATTER_STRENGTH
 
     shade = light + scatter - shadow * ABSORPTION
@@ -1002,8 +1020,8 @@ for frame in range(FRAMES):
             brightness = 1.2
             
             light_factor = shade + volume_light
-
-			r = clamp(r * light_factor * density * brightness)
+            
+            r = clamp(r * light_factor * density * brightness)
 			g = clamp(g * light_factor * density * brightness)
 			b = clamp(b * light_factor * density * brightness)
             
