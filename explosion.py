@@ -252,6 +252,10 @@ VOLUME_LIGHT_FALLOFF = 1.8
 VOLUME_LIGHT_RADIUS = 0.7
 
 
+# tamaño del paso para gradiente
+DENSITY_GRADIENT_STEP = 2
+
+
 # =========================================================
 # UTILIDADES
 # =========================================================
@@ -729,18 +733,37 @@ def thermal_transition(dist, base_radius):
 
     return outer
     
+
+# =========================================================
+# GRADIENTE DE DENSIDAD
+# =========================================================
+
+def density_gradient(x, y, t, base_radius):
+
+    step = DENSITY_GRADIENT_STEP
+
+    d1 = density_field(x + step, y, t, base_radius)
+    d2 = density_field(x - step, y, t, base_radius)
+
+    d3 = density_field(x, y + step, t, base_radius)
+    d4 = density_field(x, y - step, t, base_radius)
+
+    grad_x = (d1 - d2) / (2 * step)
+    grad_y = (d3 - d4) / (2 * step)
+
+    return grad_x, grad_y
+    
 # =========================================================
 # SOMBREADO VOLUMÉTRICO
 # =========================================================
 
-def volumetric_shading(x, y, density):
 
-    # aproximación de gradiente
-    d_dx = density
-    d_dy = density
+def volumetric_shading(x, y, t, base_radius, density):
 
-    normal_x = d_dx
-    normal_y = d_dy
+    grad_x, grad_y = density_gradient(x, y, t, base_radius)
+
+    normal_x = grad_x
+    normal_y = grad_y
 
     length = math.sqrt(normal_x * normal_x + normal_y * normal_y) + 1e-5
 
@@ -759,8 +782,6 @@ def volumetric_shading(x, y, density):
 
     return max(0, shade)
     
-    
-
 
 # =========================================================
 # ILUMINACIÓN VOLUMÉTRICA FALSA
@@ -958,7 +979,7 @@ for frame in range(FRAMES):
     			density
 			)
             
-            shade = volumetric_shading(x, y, density)
+            shade = volumetric_shading(x, y, t, outer_radius, density)
             
             volume_light = fake_volumetric_light(dist, outer_radius, density)
             
