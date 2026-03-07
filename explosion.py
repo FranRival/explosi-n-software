@@ -753,6 +753,26 @@ def density_gradient(x, y, t, base_radius):
 
     return grad_x, grad_y
     
+
+# =========================================================
+# APROXIMACIÓN DE NORMALES VOLUMÉTRICAS
+# =========================================================
+
+def density_normal(x, y, t, base_radius):
+
+    grad_x, grad_y = density_gradient(x, y, t, base_radius)
+
+    # invertir gradiente (superficie del volumen)
+    nx = -grad_x
+    ny = -grad_y
+
+    length = math.sqrt(nx * nx + ny * ny) + 1e-5
+
+    nx /= length
+    ny /= length
+
+    return nx, ny
+    
 # =========================================================
 # SOMBREADO VOLUMÉTRICO
 # =========================================================
@@ -760,22 +780,16 @@ def density_gradient(x, y, t, base_radius):
 
 def volumetric_shading(x, y, t, base_radius, density):
 
-    grad_x, grad_y = density_gradient(x, y, t, base_radius)
-
-    normal_x = grad_x
-    normal_y = grad_y
-
-    length = math.sqrt(normal_x * normal_x + normal_y * normal_y) + 1e-5
-
-    normal_x /= length
-    normal_y /= length
+    normal_x, normal_y = density_normal(x, y, t, base_radius)
 
     # iluminación direccional
     light = normal_x * LIGHT_DIR_X + normal_y * LIGHT_DIR_Y
     light = max(0, light)
 
+    # sombra volumétrica
     shadow = (1 - light) * SHADOW_STRENGTH
 
+    # dispersión interna del gas
     scatter = density * SCATTER_STRENGTH
 
     shade = light + scatter - shadow * ABSORPTION
