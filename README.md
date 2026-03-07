@@ -130,7 +130,7 @@ v4-4-3 - Masa volumetrica - Volumen aparente
 	•	- Transición física entre núcleo y periferia: núcleo blanco > amarillo brillante > naranja > rojo oscuro > humo
 
 #### Iluminación volumétrica falsa
-	•	- Cálculo de gradiente de densidad
+	•	- Cálculo de gradiente de densidad: bordes del fuego mucho más definidos + humo con volumen real + 	iluminación más natural
 	•	- Aproximación de normales
 	•	- Dirección de luz simulada
 
