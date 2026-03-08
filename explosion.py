@@ -1045,10 +1045,10 @@ for frame in range(FRAMES):
 			)
             
             shade = volumetric_shading(x, y, t, outer_radius, density)
-
-			self_shadow = volumetric_self_shadow(x, y, t, outer_radius)
-
-			volume_light = fake_volumetric_light(dist, outer_radius, density)
+            
+            self_shadow = volumetric_self_shadow(x, y, t, outer_radius)
+            
+            volume_light = fake_volumetric_light(dist, outer_radius, density)
             
             r, g, b = fire_color(temperature)
             
