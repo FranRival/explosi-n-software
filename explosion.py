@@ -845,6 +845,46 @@ def internal_darkening(density):
 
     return darkening
 
+
+# =========================================================
+# VOLUMEN PERCEPTUAL
+# =========================================================
+
+def perceptual_volume(dist, base_radius, density):
+
+    ratio = dist / (base_radius + 1e-5)
+
+    if ratio > 1:
+        return 0
+
+    # bordes más delgados (edge thinning)
+    edge = (1 - ratio)
+    edge = edge ** PERCEPTUAL_EDGE_POWER
+    edge *= PERCEPTUAL_EDGE_STRENGTH
+
+    # núcleo más profundo
+    core = density ** PERCEPTUAL_CORE_POWER
+    core *= PERCEPTUAL_CORE_BOOST
+
+    # contraste interno
+    depth = density * PERCEPTUAL_DEPTH_CONTRAST
+
+    volume = edge + core + depth
+
+    return volume
+    
+# =========================================================
+# VOLUMEN PERCEPTUAL
+# =========================================================
+
+PERCEPTUAL_EDGE_STRENGTH = 0.9
+PERCEPTUAL_EDGE_POWER = 1.8
+
+PERCEPTUAL_CORE_BOOST = 1.2
+PERCEPTUAL_CORE_POWER = 1.6
+
+PERCEPTUAL_DEPTH_CONTRAST = 0.8
+
 # =========================================================
 # SOMBREADO VOLUMÉTRICO
 # =========================================================
@@ -1077,7 +1117,14 @@ for frame in range(FRAMES):
             
             brightness = 1.2
             
-            light_factor = (shade + volume_light) * self_shadow * darkening
+            perceptual = perceptual_volume(dist, outer_radius, density)
+
+			light_factor = (
+  			  (shade + volume_light)
+    		* self_shadow
+   			 * darkening
+   			 * (1 + perceptual)
+			)
             
             r = clamp(r * light_factor * density * brightness)
 			g = clamp(g * light_factor * density * brightness)
