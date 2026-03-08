@@ -1138,4 +1138,4 @@ for frame in range(FRAMES):
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
 
-print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 (Modelo térmico continuo) generado.")
+print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 (Auto sombreado) generado.")
