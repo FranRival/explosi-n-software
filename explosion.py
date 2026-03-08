@@ -259,6 +259,12 @@ SELF_SHADOW_STEPS = 6
 SELF_SHADOW_STEP_SIZE = 6
 SELF_SHADOW_STRENGTH = 1.4
 
+# =========================================================
+# OSCURECIMIENTO INTERNO
+# =========================================================
+
+INTERNAL_ABSORPTION = 0.9
+INTERNAL_ABSORPTION_POWER = 1.3
 
 # tamaño del paso para gradiente
 DENSITY_GRADIENT_STEP = 2
@@ -825,6 +831,20 @@ def volumetric_self_shadow(x, y, t, base_radius):
     shadow = math.exp(-shadow_density * SELF_SHADOW_STRENGTH)
 
     return shadow
+    
+    
+# =========================================================
+# OSCURECIMIENTO INTERNO DEL VOLUMEN
+# =========================================================
+
+def internal_darkening(density):
+
+    absorb = density ** INTERNAL_ABSORPTION_POWER
+
+    darkening = math.exp(-absorb * INTERNAL_ABSORPTION)
+
+    return darkening
+
 # =========================================================
 # SOMBREADO VOLUMÉTRICO
 # =========================================================
@@ -1051,11 +1071,13 @@ for frame in range(FRAMES):
 
 			volume_light = fake_volumetric_light(dist, outer_radius, density)
             
+            darkening = internal_darkening(density)
+            
             r, g, b = fire_color(temperature)
             
             brightness = 1.2
             
-            light_factor = shade + volume_light
+            light_factor = (shade + volume_light) * self_shadow * darkening
             
             r = clamp(r * light_factor * density * brightness)
 			g = clamp(g * light_factor * density * brightness)
