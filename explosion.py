@@ -251,6 +251,14 @@ VOLUME_LIGHT_STRENGTH = 0.9
 VOLUME_LIGHT_FALLOFF = 1.8
 VOLUME_LIGHT_RADIUS = 0.7
 
+# =========================================================
+# AUTO SOMBREADO VOLUMÉTRICO
+# =========================================================
+
+SELF_SHADOW_STEPS = 6
+SELF_SHADOW_STEP_SIZE = 6
+SELF_SHADOW_STRENGTH = 1.4
+
 
 # tamaño del paso para gradiente
 DENSITY_GRADIENT_STEP = 2
@@ -791,6 +799,32 @@ def simulated_light_direction(x, y):
     return lx, ly
     
     
+    
+# =========================================================
+# AUTO SOMBREADO VOLUMÉTRICO
+# =========================================================
+
+def volumetric_self_shadow(x, y, t, base_radius):
+
+    light_x, light_y = simulated_light_direction(x, y)
+
+    shadow_density = 0.0
+
+    for i in range(1, SELF_SHADOW_STEPS + 1):
+
+        sx = x - light_x * i * SELF_SHADOW_STEP_SIZE
+        sy = y - light_y * i * SELF_SHADOW_STEP_SIZE
+
+        if sx < 0 or sx >= WIDTH or sy < 0 or sy >= HEIGHT:
+            continue
+
+        d = density_field(sx, sy, t, base_radius)
+
+        shadow_density += d
+
+    shadow = math.exp(-shadow_density * SELF_SHADOW_STRENGTH)
+
+    return shadow
 # =========================================================
 # SOMBREADO VOLUMÉTRICO
 # =========================================================
@@ -1012,8 +1046,10 @@ for frame in range(FRAMES):
 			)
             
             shade = volumetric_shading(x, y, t, outer_radius, density)
-            
-            volume_light = fake_volumetric_light(dist, outer_radius, density)
+
+			self_shadow = volumetric_self_shadow(x, y, t, outer_radius)
+
+			volume_light = fake_volumetric_light(dist, outer_radius, density)
             
             r, g, b = fire_color(temperature)
             
