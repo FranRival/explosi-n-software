@@ -143,6 +143,8 @@ v4-4-3 - Masa volumetrica - Volumen aparente
 
 ### Nivel 4 — Composición visual y post-procesado
 
+	•	- núcleo con glow - humo con profundidad - cavidades internas oscuras - halo brillante alrededor del fuego - contraste cinematográfico
+
 #### Bloom
 	•	- Desenfoque de zonas brillantes
 	•	- Expansión de luminancia
