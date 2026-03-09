@@ -292,6 +292,44 @@ def perlin(x, y, t, scale):
 
 
 # =========================================================
+# BLOOM
+# =========================================================
+
+def apply_bloom(img):
+
+    h, w, _ = img.shape
+    result = img.copy()
+
+    for y in range(h):
+        for x in range(w):
+
+            r, g, b, a = img[y, x]
+
+            brightness = (r + g + b) / 3
+
+            if brightness < 180:
+                continue
+
+            for dy in range(-BLOOM_RADIUS, BLOOM_RADIUS + 1):
+                for dx in range(-BLOOM_RADIUS, BLOOM_RADIUS + 1):
+
+                    sx = x + dx
+                    sy = y + dy
+
+                    if sx < 0 or sx >= w or sy < 0 or sy >= h:
+                        continue
+
+                    dist = math.sqrt(dx*dx + dy*dy)
+
+                    weight = max(0, 1 - dist / BLOOM_RADIUS)
+
+                    result[sy, sx, 0] = clamp(result[sy, sx, 0] + r * weight * BLOOM_STRENGTH)
+                    result[sy, sx, 1] = clamp(result[sy, sx, 1] + g * weight * BLOOM_STRENGTH)
+                    result[sy, sx, 2] = clamp(result[sy, sx, 2] + b * weight * BLOOM_STRENGTH)
+
+    return result
+    
+# =========================================================
 # FRACTAL BROWNIAN MOTION
 # =========================================================
 
@@ -884,6 +922,48 @@ PERCEPTUAL_CORE_POWER = 1.6
 
 PERCEPTUAL_DEPTH_CONTRAST = 0.8
 
+
+# =========================================================
+# NIVEL 4 — POST PROCESADO
+# =========================================================
+
+# bloom
+BLOOM_STRENGTH = 0.35
+BLOOM_RADIUS = 4
+
+# tone mapping
+HDR_EXPOSURE = 1.4
+
+# =========================================================
+# TONE MAPPING HDR
+# =========================================================
+
+def tone_mapping(img):
+
+    h, w, _ = img.shape
+
+    for y in range(h):
+        for x in range(w):
+
+            r, g, b, a = img[y, x]
+
+            r = 255 * (1 - math.exp(-r * HDR_EXPOSURE / 255))
+            g = 255 * (1 - math.exp(-g * HDR_EXPOSURE / 255))
+            b = 255 * (1 - math.exp(-b * HDR_EXPOSURE / 255))
+
+            img[y, x, 0] = clamp(r)
+            img[y, x, 1] = clamp(g)
+            img[y, x, 2] = clamp(b)
+
+    return img
+
+# contraste
+COLOR_CONTRAST = 1.25
+COLOR_GAMMA = 0.9
+
+# viñeta
+VIGNETTE_STRENGTH = 0.6
+
 # =========================================================
 # SOMBREADO VOLUMÉTRICO
 # =========================================================
@@ -964,6 +1044,63 @@ def radial_modifier(dist, base_radius):
     return radial
     
 
+
+# =========================================================
+# COLOR GRADING
+# =========================================================
+
+def color_grading(img):
+
+    h, w, _ = img.shape
+
+    for y in range(h):
+        for x in range(w):
+
+            r, g, b, a = img[y, x]
+
+            r = ((r / 255) ** COLOR_GAMMA) * 255 * COLOR_CONTRAST
+            g = ((g / 255) ** COLOR_GAMMA) * 255 * COLOR_CONTRAST
+            b = ((b / 255) ** COLOR_GAMMA) * 255 * COLOR_CONTRAST
+
+            img[y, x, 0] = clamp(r)
+            img[y, x, 1] = clamp(g)
+            img[y, x, 2] = clamp(b)
+
+    return img
+    
+    
+
+# =========================================================
+# VIGNETTE
+# =========================================================
+
+def apply_vignette(img):
+
+    h, w, _ = img.shape
+
+    cx = w / 2
+    cy = h / 2
+
+    max_dist = math.sqrt(cx*cx + cy*cy)
+
+    for y in range(h):
+        for x in range(w):
+
+            dx = x - cx
+            dy = y - cy
+
+            dist = math.sqrt(dx*dx + dy*dy) / max_dist
+
+            factor = 1 - dist * VIGNETTE_STRENGTH
+
+            r, g, b, a = img[y, x]
+
+            img[y, x, 0] = clamp(r * factor)
+            img[y, x, 1] = clamp(g * factor)
+            img[y, x, 2] = clamp(b * factor)
+
+    return img
+    
 # =========================================================
 # CURVA DE ENERGÍA DE LA EXPLOSIÓN
 # =========================================================
@@ -1182,7 +1319,19 @@ for frame in range(FRAMES):
             if 0 <= px < WIDTH and 0 <= py < HEIGHT:
                 img[py, px] = (255, 200, 80, 255)
 
-    Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
+# =========================================================
+# POST PROCESADO
+# =========================================================
+
+img = apply_bloom(img)
+
+img = tone_mapping(img)
+
+img = color_grading(img)
+
+img = apply_vignette(img)
+
+Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
 
 print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 (Auto sombreado) generado.")
