@@ -1117,12 +1117,12 @@ for frame in range(FRAMES):
             brightness = 1.2
             
             perceptual = perceptual_volume(dist, outer_radius, density)
-
-			light_factor = (
-  			  (shade + volume_light)
-    		* self_shadow
-   			 * darkening
-   			 * (1 + perceptual)
+            
+            light_factor = (
+                (shade + volume_light)
+                * self_shadow
+                * darkening
+                * (1 + perceptual)
 			)
             
             r = clamp(r * light_factor * density * brightness)
