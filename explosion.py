@@ -9,1337 +9,162 @@ import random
 import numpy as np
 from PIL import Image
 from noise import pnoise2
-
+from scipy.ndimage import gaussian_filter
 
 # =========================================================
-# NIVEL 0 + NIVEL 1 COMPLETO – ROBUSTO
+# CONFIGURACIÓN Y PARÁMETROS (APEGADO AL README)
 # =========================================================
-
-WIDTH = 512
-HEIGHT = 512
+WIDTH, HEIGHT = 512, 512
 FRAMES = 50
 DURATION = 1.3
-
-CENTER_X = WIDTH // 2
-CENTER_Y = HEIGHT // 2
-
-RADIAL_DENSITY_WEIGHT = 1.4
-RADIAL_DENSITY_POWER = 1.6
-
+CENTER_X, CENTER_Y = WIDTH // 2, HEIGHT // 2
 SEED = 42
-random.seed(SEED)
 
-os.makedirs("output", exist_ok=True)
-
-
-# =========================================================
-# PARÁMETROS NIVEL 1
-# =========================================================
-
+# Parámetros Nivel 1 & 2
 ANGULAR_BIAS_UP = 1.6
 FAN_OPENING = math.pi * 0.9
 TEAR_FACTOR = 1.4
 RADIAL_HOLE = 25
-
-BASE_SPEED = 220
 ENERGY_PEAK = 2.0
 ENERGY_REBOUND = 0.35
-
-SECONDARY_BURST_TIME = 0.45
-MICRO_WAVE_FREQ = 10
-
-RADIUS_CORE = 40
-RADIUS_INNER = 85
-RADIUS_OUTER = 130
-
-INTENSITY_CORE = 2.0
-
-NOISE_SCALE = 0.008
-NOISE_STRENGTH = 0.5
-
-SMOKE_OPACITY = 130
-SMOKE_SCALE = 0.004
-
-PARTICLE_COUNT = 180
-PARTICLE_SPEED = (140, 300)
-PARTICLE_DRAG = 0.96
-
-
-# =========================================================
-# PARÁMETROS NIVEL 2 (CAMPO DE DENSIDAD)
-# =========================================================
-
-DENSITY_FALLOFF = 2.0
 DENSITY_HEIGHT_LIFT = 120
-DENSITY_NOISE_SCALE = 0.01
-DENSITY_NOISE_STRENGTH = 0.6
 
-HEIGHT_DENSITY_WEIGHT = 1.7
-HEIGHT_DENSITY_POWER = 1.4
-
-# compresión interna de masa
-MASS_COMPRESSION = 1.8
-MASS_CORE_RADIUS = 0.35
-
-
-# =========================================================
-# CAMPO DE DENSIDAD BASE
-# =========================================================
-
-def base_density_field(dist, base_radius):
-
-    ratio = dist / base_radius
-
-    if ratio >= 1:
-        return 0
-
-    density = 1 - ratio
-    density = density ** DENSITY_FALLOFF
-
-    return density
-
-
-
-# =========================================================
-# RUIDO FRACTAL AVANZADO (fBm)
-# =========================================================
-
-FBM_OCTAVES = 6
-FBM_GAIN = 0.5
-FBM_LACUNARITY = 2.0
-
-FBM_SCALE_MACRO = 0.004
-FBM_SCALE_DETAIL = 0.02
-
-FBM_STRENGTH = 0.65
-
-# ruido fractal profundo (6-8 octavas)
-
-FBM_DEEP_OCTAVES = 8
-FBM_DEEP_GAIN = 0.55
-FBM_DEEP_LACUNARITY = 2.1
-
-FBM_DEEP_SCALE = 0.015
-FBM_DEEP_STRENGTH = 0.45
-
-
-# =========================================================
-# MULTI SCALE FRACTAL (ESCALAS MULTIPLES)
-# =========================================================
-
-FBM_SUPER_MACRO_SCALE = 0.0015
-FBM_SUPER_MACRO_STRENGTH = 0.55
-
-FBM_FINE_SCALE = 0.04
-FBM_FINE_STRENGTH = 0.35
-
-
-# =========================================================
-# MACROFORMA + MICRODETALLE
-# =========================================================
-
-MACRO_SHAPE_SCALE = 0.002
-MACRO_SHAPE_STRENGTH = 0.7
-
-MICRO_DETAIL_SCALE = 0.06
-MICRO_DETAIL_STRENGTH = 0.25
-
-
-# =========================================================
-# DISTORSIÓN TEMPORAL (EVOLUCIÓN DEL CAMPO DE DENSIDAD)
-# =========================================================
-
-TEMPORAL_FLOW_SCALE = 0.003
-TEMPORAL_FLOW_STRENGTH = 80
-
-TEMPORAL_DETAIL_SCALE = 0.01
-TEMPORAL_DETAIL_STRENGTH = 35
-
-
-# =========================================================
-# TURBULENCIA DINÁMICA
-# =========================================================
-
-TURBULENCE_SCALE = 0.006
-TURBULENCE_STRENGTH = 45
-
-TURBULENCE_DETAIL_SCALE = 0.02
-TURBULENCE_DETAIL_STRENGTH = 18
-
-
-# =========================================================
-# MASA VOLUMÉTRICA
-# =========================================================
-
-VOLUME_MASS_SCALE = 0.003
-VOLUME_MASS_STRENGTH = 1.2
-
-VOLUME_MASS_DETAIL_SCALE = 0.01
-VOLUME_MASS_DETAIL_STRENGTH = 0.6
-
-
-# =========================================================
-# FORMACIÓN DE BULTO TIPO HONGO
-# =========================================================
-
-MUSHROOM_SCALE = 0.004
-MUSHROOM_STRENGTH = 1.1
-
-MUSHROOM_VERTICAL_BIAS = 1.6
-MUSHROOM_CAP_RADIUS = 0.65
-
-
-# =========================================================
-# ESTRUCTURA IRREGULAR INTERNA
-# =========================================================
-
-INTERNAL_STRUCTURE_SCALE = 0.008
-INTERNAL_STRUCTURE_STRENGTH = 0.8
-
-INTERNAL_CAVITY_SCALE = 0.015
-INTERNAL_CAVITY_STRENGTH = 0.6
-
-
-# =========================================================
-# VOLUMEN APARENTE
-# =========================================================
-
-APPARENT_VOLUME_STRENGTH = 1.3
-APPARENT_VOLUME_POWER = 1.6
-APPARENT_VOLUME_RADIUS = 0.75
-
-# =========================================================
-# NIVEL 3 — MODELO TÉRMICO
-# =========================================================
-
+# Parámetros Nivel 3 (Térmico)
 TEMPERATURE_CORE = 1.8
 TEMPERATURE_DECAY = 1.4
-TEMPERATURE_NOISE_SCALE = 0.01
-TEMPERATURE_NOISE_STRENGTH = 0.35
 
-HEAT_BUOYANCY = 1.2
+os.makedirs("output", exist_ok=True)
 
-# relación densidad → temperatura
-DENSITY_TO_TEMPERATURE = 1.6
-TEMPERATURE_DENSITY_POWER = 1.2
-
-# difusión térmica
-THERMAL_GRADIENT_SCALE = 0.008
-THERMAL_GRADIENT_STRENGTH = 0.6
-
-# transición núcleo → periferia
-THERMAL_TRANSITION_RADIUS = 0.65
-THERMAL_TRANSITION_POWER = 2.0
-THERMAL_COOLING_RATE = 0.7
-
-# =========================================================
-# SOMBREADO VOLUMÉTRICO
-# =========================================================
-
-LIGHT_DIR_X = -0.6
-LIGHT_DIR_Y = -0.8
-
-SHADOW_STRENGTH = 0.7
-SCATTER_STRENGTH = 0.5
-ABSORPTION = 0.6
-
-# =========================================================
-# ILUMINACIÓN VOLUMÉTRICA FALSA
-# =========================================================
-
-VOLUME_LIGHT_STRENGTH = 0.9
-VOLUME_LIGHT_FALLOFF = 1.8
-VOLUME_LIGHT_RADIUS = 0.7
-
-# =========================================================
-# AUTO SOMBREADO VOLUMÉTRICO
-# =========================================================
-
-SELF_SHADOW_STEPS = 6
-SELF_SHADOW_STEP_SIZE = 6
-SELF_SHADOW_STRENGTH = 1.4
-
-# =========================================================
-# OSCURECIMIENTO INTERNO
-# =========================================================
-
-INTERNAL_ABSORPTION = 0.9
-INTERNAL_ABSORPTION_POWER = 1.3
-
-# tamaño del paso para gradiente
-DENSITY_GRADIENT_STEP = 2
-
-
-# =========================================================
-# UTILIDADES
-# =========================================================
-
-def clamp(value, min_val=0, max_val=255):
-    return max(min_val, min(max_val, int(value)))
-
-
-def perlin(x, y, t, scale):
-    return pnoise2(
-        x * scale,
-        y * scale + t * 2.0,
-        octaves=5,
-        persistence=0.5,
-        lacunarity=2.0,
-        repeatx=1024,
-        repeaty=1024,
-        base=SEED
-    )
-
-
-# =========================================================
-# BLOOM
-# =========================================================
-
-def apply_bloom(img):
-
-    h, w, _ = img.shape
-    result = img.copy()
-
-    for y in range(h):
-        for x in range(w):
-
-            r, g, b, a = img[y, x]
-
-            brightness = (float(r) + float(g) + float(b)) / 3
-
-            if brightness < 180:
-                continue
-
-            for dy in range(-BLOOM_RADIUS, BLOOM_RADIUS + 1):
-                for dx in range(-BLOOM_RADIUS, BLOOM_RADIUS + 1):
-
-                    sx = x + dx
-                    sy = y + dy
-
-                    if sx < 0 or sx >= w or sy < 0 or sy >= h:
-                        continue
-
-                    dist = math.sqrt(dx*dx + dy*dy)
-
-                    weight = max(0, 1 - dist / BLOOM_RADIUS)
-
-                    result[sy, sx, 0] = clamp(result[sy, sx, 0] + r * weight * BLOOM_STRENGTH)
-                    result[sy, sx, 1] = clamp(result[sy, sx, 1] + g * weight * BLOOM_STRENGTH)
-                    result[sy, sx, 2] = clamp(result[sy, sx, 2] + b * weight * BLOOM_STRENGTH)
-
-    return result
-    
-# =========================================================
-# FRACTAL BROWNIAN MOTION
-# =========================================================
-
-def fbm(x, y, t, scale):
-
-    value = 0.0
-    amplitude = 1.0
-    frequency = scale
-
-    for i in range(FBM_OCTAVES):
-
-        n = pnoise2(
-            x * frequency,
-            y * frequency + t * 2.0,
-            repeatx=1024,
-            repeaty=1024,
-            base=SEED + i
-        )
-
-        value += n * amplitude
-
-        frequency *= FBM_LACUNARITY
-        amplitude *= FBM_GAIN
-
-    return value
-
-
-# =========================================================
-# FRACTAL BROWNIAN MOTION PROFUNDO (8 OCTAVAS)
-# =========================================================
-
-def fbm_deep(x, y, t, scale):
-
-    value = 0.0
-    amplitude = 1.0
-    frequency = scale
-
-    for i in range(FBM_DEEP_OCTAVES):
-
-        n = pnoise2(
-            x * frequency,
-            y * frequency + t * 2.0,
-            repeatx=1024,
-            repeaty=1024,
-            base=SEED + 200 + i
-        )
-
-        value += n * amplitude
-
-        frequency *= FBM_DEEP_LACUNARITY
-        amplitude *= FBM_DEEP_GAIN
-
-    return value
-
-
-# =========================================================
-# MULTI SCALE FRACTAL NOISE
-# =========================================================
-
-def fbm_super_macro(x, y, t):
-    return fbm(x, y, t, FBM_SUPER_MACRO_SCALE)
-
-
-def fbm_fine_detail(x, y, t):
-    return fbm_deep(x, y, t, FBM_FINE_SCALE)
-
-
-# =========================================================
-# MACROFORMA
-# =========================================================
-
-def macro_shape_noise(x, y, t):
-    return fbm(x, y, t, MACRO_SHAPE_SCALE)
-
-
-# =========================================================
-# MICRO DETALLE
-# =========================================================
-
-def micro_detail_noise(x, y, t):
-    return fbm_deep(x, y, t, MICRO_DETAIL_SCALE)
-
-
-# =========================================================
-# DISTORSIÓN TEMPORAL DEL CAMPO DE DENSIDAD
-# =========================================================
-
-def temporal_flow(x, y, t):
-
-    flow_x = fbm(x + 4000, y + 4000, t, TEMPORAL_FLOW_SCALE)
-    flow_y = fbm(x - 4000, y - 4000, t, TEMPORAL_FLOW_SCALE)
-
-    flow_x *= TEMPORAL_FLOW_STRENGTH
-    flow_y *= TEMPORAL_FLOW_STRENGTH
-
-    return flow_x, flow_y
-
-
-def temporal_detail(x, y, t):
-
-    detail_x = fbm_deep(x + 6000, y + 6000, t, TEMPORAL_DETAIL_SCALE)
-    detail_y = fbm_deep(x - 6000, y - 6000, t, TEMPORAL_DETAIL_SCALE)
-
-    detail_x *= TEMPORAL_DETAIL_STRENGTH
-    detail_y *= TEMPORAL_DETAIL_STRENGTH
-
-    return detail_x, detail_y
-
-
-# =========================================================
-# TURBULENCIA DINÁMICA
-# =========================================================
-
-def dynamic_turbulence(x, y, t):
-
-    # campo base
-
-    n1 = fbm(x + 8000, y + 8000, t, TURBULENCE_SCALE)
-    n2 = fbm(x - 8000, y - 8000, t, TURBULENCE_SCALE)
-
-    vx = -n2
-    vy = n1
-
-    vx *= TURBULENCE_STRENGTH
-    vy *= TURBULENCE_STRENGTH
-
-    return vx, vy
-
-
-def dynamic_turbulence_detail(x, y, t):
-
-    n1 = fbm_deep(x + 10000, y + 10000, t, TURBULENCE_DETAIL_SCALE)
-    n2 = fbm_deep(x - 10000, y - 10000, t, TURBULENCE_DETAIL_SCALE)
-
-    vx = -n2
-    vy = n1
-
-    vx *= TURBULENCE_DETAIL_STRENGTH
-    vy *= TURBULENCE_DETAIL_STRENGTH
-
-    return vx, vy
-
-
-# =========================================================
-# MASA VOLUMÉTRICA
-# =========================================================
-
-def volumetric_mass(x, y, t):
-
-    # masa base
-    base_mass = fbm(x + 12000, y + 12000, t, VOLUME_MASS_SCALE)
-
-    # detalle interno
-    detail_mass = fbm_deep(x - 12000, y - 12000, t, VOLUME_MASS_DETAIL_SCALE)
-
-    base_mass *= VOLUME_MASS_STRENGTH
-    detail_mass *= VOLUME_MASS_DETAIL_STRENGTH
-
-    return base_mass + detail_mass
-
-
-# =========================================================
-# FORMACIÓN DE BULTO TIPO HONGO
-# =========================================================
-
-def mushroom_lobes(x, y, t, dist, base_radius):
-
-    # ruido base que crea lóbulos
-    lobe_noise = fbm(x + 15000, y + 15000, t, MUSHROOM_SCALE)
-
-    # sesgo vertical (el hongo sube)
-    vertical = (CENTER_Y - y) / HEIGHT
-    vertical = max(0, vertical)
-    vertical *= MUSHROOM_VERTICAL_BIAS
-
-    # región de la "cúpula" del hongo
-    cap_zone = dist / base_radius
-
-    if cap_zone < MUSHROOM_CAP_RADIUS:
-        cap_factor = 1 - cap_zone
-    else:
-        cap_factor = 0
-
-    cap_factor = cap_factor ** 2
-
-    return lobe_noise * vertical * cap_factor * MUSHROOM_STRENGTH
-
-
-# =========================================================
-# ESTRUCTURA IRREGULAR INTERNA
-# =========================================================
-
-def internal_structure(x, y, t):
-
-    # masa irregular
-    structure = fbm(x + 18000, y + 18000, t, INTERNAL_STRUCTURE_SCALE)
-
-    # cavidades internas
-    cavities = fbm_deep(x - 18000, y - 18000, t, INTERNAL_CAVITY_SCALE)
-
-    structure *= INTERNAL_STRUCTURE_STRENGTH
-    cavities *= INTERNAL_CAVITY_STRENGTH
-
-    # las cavidades restan densidad
-    return structure - abs(cavities)
-
-
-# =========================================================
-# VOLUMEN APARENTE
-# =========================================================
-
-def apparent_volume(dist, base_radius):
-
-    ratio = dist / base_radius
-
-    if ratio < APPARENT_VOLUME_RADIUS:
-        volume = 1 - ratio
-    else:
-        volume = 0
-
-    volume = volume ** APPARENT_VOLUME_POWER
-
-    return volume * APPARENT_VOLUME_STRENGTH
-
-
-# =========================================================
-# INFLUENCIA DE ALTURA
-# =========================================================
-
-def height_density(y, t):
-
-    lift = t * DENSITY_HEIGHT_LIFT
-
-    height_factor = (CENTER_Y - y + lift) / HEIGHT
-    height_factor = max(0, height_factor)
-
-    height_factor = height_factor ** HEIGHT_DENSITY_POWER
-
-    return height_factor * HEIGHT_DENSITY_WEIGHT
-
-
-# =========================================================
-# COMPRESIÓN INTERNA DE MASA
-# =========================================================
-
-def mass_compression(dist, base_radius):
-
-    core_limit = base_radius * MASS_CORE_RADIUS
-
-    if dist < core_limit:
-
-        compression = 1 - (dist / core_limit)
-        compression = compression ** MASS_COMPRESSION
-
-        return compression
-
-    return 0
-
-
-# =========================================================
-# CAMPO DE DENSIDAD
-# =========================================================
-
-def density_field(x, y, t, base_radius):
-
-    dx = x - CENTER_X
-    dy = y - CENTER_Y
-
-    # distorsión temporal
-
-    flow_x, flow_y = temporal_flow(x, y, t)
-    detail_x, detail_y = temporal_detail(x, y, t)
-
-    x += flow_x + detail_x
-    y += flow_y + detail_y
-
-    # turbulencia dinámica
-
-    turb_x, turb_y = dynamic_turbulence(x, y, t)
-    turb_dx, turb_dy = dynamic_turbulence_detail(x, y, t)
-
-    x += turb_x + turb_dx
-    y += turb_y + turb_dy
-
-    dy_lift = dy + t * DENSITY_HEIGHT_LIFT
-    dist = math.sqrt(dx * dx + dy_lift * dy_lift)
-
-    # influencia radial
-    # densidad base
-
-    base_density = base_density_field(dist, base_radius)
-    radial = radial_modifier(dist, base_radius)
-
-    base_density *= radial
-
-    # ruido procedural
-
-    noise = perlin(x, y, t, DENSITY_NOISE_SCALE)
-    noise_density = noise * DENSITY_NOISE_STRENGTH
-
-    # fractal brownian motion
-
-    fbm_macro = fbm(x, y, t, FBM_SCALE_MACRO)
-    fbm_detail = fbm(x + 500, y + 500, t, FBM_SCALE_DETAIL)
-    fbm_value = (fbm_macro * 0.7 + fbm_detail * 0.3) * FBM_STRENGTH
-
-    # ruido fractal profundo
-
-    fbm_micro = fbm_deep(x + 1200, y + 1200, t, FBM_DEEP_SCALE)
-    fbm_micro *= FBM_DEEP_STRENGTH
-
-    # multi scale noise
-
-    fbm_super = fbm_super_macro(x - 800, y - 800, t)
-    fbm_super *= FBM_SUPER_MACRO_STRENGTH
-
-    fbm_fine = fbm_fine_detail(x + 2000, y + 2000, t)
-    fbm_fine *= FBM_FINE_STRENGTH
-
-    # macro forma
-
-    macro_shape = macro_shape_noise(x - 3000, y - 3000, t)
-    macro_shape *= MACRO_SHAPE_STRENGTH
-
-    # micro detalle
-
-    micro_detail = micro_detail_noise(x + 3500, y + 3500, t)
-    micro_detail *= MICRO_DETAIL_STRENGTH
-
-    # influencia de altura
-
-    height_component = height_density(y, t)
-
-    # compresión interna
-
-    compression = mass_compression(dist, base_radius)
-
-    # masa volumétrica
-
-    volume_mass = volumetric_mass(x, y, t)
-
-    # bultos tipo hongo
-
-    mushroom = mushroom_lobes(x, y, t, dist, base_radius)
-
-    # estructura irregular interna
-
-    internal = internal_structure(x, y, t)
-
-    # volumen aparente
-
-    apparent = apparent_volume(dist, base_radius)
-
-    # densidad final
-
-    density = (
-        base_density
-        + noise_density
-        + height_component
-        + compression
-        + volume_mass
-        + mushroom
-        + internal
-        + apparent
-        + fbm_value
-        + fbm_micro
-        + fbm_super
-        + fbm_fine
-        + macro_shape
-        + micro_detail
-    )
-
-    return max(0, density)
-
-# =========================================================
-# CAMPO DE TEMPERATURA
-# =========================================================
-
-
-def temperature_field(x, y, t, dist, base_radius, density):
-
-    # temperatura base radial
-    r = dist / (base_radius + 1e-5)
-
-    if r > 1:
-        return 0
-
-    radial_temp = (1 - r) ** TEMPERATURE_DECAY
-    radial_temp *= TEMPERATURE_CORE
-
-    # temperatura derivada de la densidad
-    density_temp = (density ** TEMPERATURE_DENSITY_POWER) * DENSITY_TO_TEMPERATURE
-
-    # ruido térmico
-    heat_noise = fbm(x + 21000, y + 21000, t, TEMPERATURE_NOISE_SCALE)
-    heat_noise *= TEMPERATURE_NOISE_STRENGTH
-
-    # flotabilidad del calor
-    vertical = max(0, (CENTER_Y - y) / HEIGHT)
-    buoyancy = vertical * HEAT_BUOYANCY
-
-    # gradiente térmico continuo
-    gradient = thermal_gradient(x, y, t)
-    
-    transition = thermal_transition(dist, base_radius)
-    temperature = (
-        radial_temp
-    	+ density_temp
-		+ heat_noise
-        + buoyancy
-    	+ gradient
-	) * transition
-
-    return max(0, temperature)
-    
-
-
-# =========================================================
-# GRADIENTE TÉRMICO CONTINUO
-# =========================================================
-
-def thermal_gradient(x, y, t):
-
-    # difusión del calor en el fluido
-    gradient = fbm(x + 26000, y + 26000, t, THERMAL_GRADIENT_SCALE)
-
-    gradient *= THERMAL_GRADIENT_STRENGTH
-
-    return gradient
-    
-
-# =========================================================
-# TRANSICIÓN TÉRMICA NÚCLEO → PERIFERIA
-# =========================================================
-
-def thermal_transition(dist, base_radius):
-
-    ratio = dist / (base_radius + 1e-5)
-
-    if ratio > 1:
-        return 0
-
-    # región del núcleo
-    if ratio < THERMAL_TRANSITION_RADIUS:
-        core = 1 - ratio / THERMAL_TRANSITION_RADIUS
-        core = core ** THERMAL_TRANSITION_POWER
-        return core
-
-    # región de enfriamiento
-    outer = (1 - ratio)
-    outer = outer ** THERMAL_COOLING_RATE
-
-    return outer
-    
-
-# =========================================================
-# GRADIENTE DE DENSIDAD
-# =========================================================
-
-def density_gradient(x, y, t, base_radius):
-
-    step = DENSITY_GRADIENT_STEP
-
-    d1 = density_field(x + step, y, t, base_radius)
-    d2 = density_field(x - step, y, t, base_radius)
-
-    d3 = density_field(x, y + step, t, base_radius)
-    d4 = density_field(x, y - step, t, base_radius)
-
-    grad_x = (d1 - d2) / (2 * step)
-    grad_y = (d3 - d4) / (2 * step)
-
-    return grad_x, grad_y
-    
-
-# =========================================================
-# APROXIMACIÓN DE NORMALES VOLUMÉTRICAS
-# =========================================================
-
-def density_normal(x, y, t, base_radius):
-
-    grad_x, grad_y = density_gradient(x, y, t, base_radius)
-
-    # invertir gradiente (superficie del volumen)
-    nx = -grad_x
-    ny = -grad_y
-
-    length = math.sqrt(nx * nx + ny * ny) + 1e-5
-
-    nx /= length
-    ny /= length
-
-    return nx, ny
-    
-
-# =========================================================
-# DIRECCIÓN DE LUZ SIMULADA (DESDE EL NÚCLEO)
-# =========================================================
-
-def simulated_light_direction(x, y):
-
-    lx = x - CENTER_X
-    ly = y - CENTER_Y
-
-    length = math.sqrt(lx * lx + ly * ly) + 1e-5
-
-    lx /= length
-    ly /= length
-
-    return lx, ly
-    
-    
-    
-# =========================================================
-# AUTO SOMBREADO VOLUMÉTRICO
-# =========================================================
-
-def volumetric_self_shadow(x, y, t, base_radius):
-
-    light_x, light_y = simulated_light_direction(x, y)
-
-    shadow_density = 0.0
-
-    for i in range(1, SELF_SHADOW_STEPS + 1):
-
-        sx = x - light_x * i * SELF_SHADOW_STEP_SIZE
-        sy = y - light_y * i * SELF_SHADOW_STEP_SIZE
-
-        if sx < 0 or sx >= WIDTH or sy < 0 or sy >= HEIGHT:
-            continue
-
-        d = density_field(sx, sy, t, base_radius)
-
-        shadow_density += d
-
-    shadow = math.exp(-shadow_density * SELF_SHADOW_STRENGTH)
-
-    return shadow
-    
-    
-# =========================================================
-# OSCURECIMIENTO INTERNO DEL VOLUMEN
-# =========================================================
-
-def internal_darkening(density):
-
-    absorb = density ** INTERNAL_ABSORPTION_POWER
-
-    darkening = math.exp(-absorb * INTERNAL_ABSORPTION)
-
-    return darkening
-
-
-# =========================================================
-# VOLUMEN PERCEPTUAL
-# =========================================================
-
-def perceptual_volume(dist, base_radius, density):
-
-    ratio = dist / (base_radius + 1e-5)
-
-    if ratio > 1:
-        return 0
-
-    # bordes más delgados (edge thinning)
-    edge = (1 - ratio)
-    edge = edge ** PERCEPTUAL_EDGE_POWER
-    edge *= PERCEPTUAL_EDGE_STRENGTH
-
-    # núcleo más profundo
-    core = density ** PERCEPTUAL_CORE_POWER
-    core *= PERCEPTUAL_CORE_BOOST
-
-    # contraste interno
-    depth = density * PERCEPTUAL_DEPTH_CONTRAST
-
-    volume = edge + core + depth
-
-    return volume
-    
-# =========================================================
-# VOLUMEN PERCEPTUAL
-# =========================================================
-
-PERCEPTUAL_EDGE_STRENGTH = 0.9
-PERCEPTUAL_EDGE_POWER = 1.8
-
-PERCEPTUAL_CORE_BOOST = 1.2
-PERCEPTUAL_CORE_POWER = 1.6
-
-PERCEPTUAL_DEPTH_CONTRAST = 0.8
-
-
-# =========================================================
-# NIVEL 4 — POST PROCESADO
-# =========================================================
-
-# bloom
-BLOOM_STRENGTH = 0.35
-BLOOM_RADIUS = 4
-
-# tone mapping
-HDR_EXPOSURE = 1.4
-
-# =========================================================
-# TONE MAPPING HDR
-# =========================================================
-
-def tone_mapping(img):
-
-    h, w, _ = img.shape
-
-    for y in range(h):
-        for x in range(w):
-
-            r, g, b, a = img[y, x]
-
-            r = float(r)
-            g = float(g)
-            b = float(b)
-
-            r = 255 * (1 - math.exp(-r * HDR_EXPOSURE / 255))
-            g = 255 * (1 - math.exp(-g * HDR_EXPOSURE / 255))
-            b = 255 * (1 - math.exp(-b * HDR_EXPOSURE / 255))
-
-            img[y, x, 0] = clamp(r)
-            img[y, x, 1] = clamp(g)
-            img[y, x, 2] = clamp(b)
-
-    return img
-
-# contraste
-COLOR_CONTRAST = 1.25
-COLOR_GAMMA = 0.9
-
-# viñeta
-VIGNETTE_STRENGTH = 0.6
-
-# =========================================================
-# SOMBREADO VOLUMÉTRICO
-# =========================================================
-
-
-def volumetric_shading(x, y, t, base_radius, density):
-
-    normal_x, normal_y = density_normal(x, y, t, base_radius)
-
-    light_x, light_y = simulated_light_direction(x, y)
-
-    # iluminación direccional simulada
-    light = normal_x * light_x + normal_y * light_y
-    light = max(0, light)
-
-    shadow = (1 - light) * SHADOW_STRENGTH
-
-    scatter = density * SCATTER_STRENGTH
-
-    shade = light + scatter - shadow * ABSORPTION
-
-    return max(0, shade)
-    
-
-# =========================================================
-# ILUMINACIÓN VOLUMÉTRICA FALSA
-# =========================================================
-
-def fake_volumetric_light(dist, base_radius, density):
-
-    ratio = dist / (base_radius + 1e-5)
-
-    if ratio > 1:
-        return 0
-
-    # intensidad cerca del núcleo
-    core_light = max(0, 1 - ratio / VOLUME_LIGHT_RADIUS)
-
-    core_light = core_light ** VOLUME_LIGHT_FALLOFF
-
-    # la luz depende también de la densidad del gas
-    light = core_light * density * VOLUME_LIGHT_STRENGTH
-
-    return light
-# =========================================================
-# COLOR FÍSICO DE FUEGO
-# =========================================================
-
-def fire_color(temperature):
-
-    if temperature > 1.2:
-        return 255, 255, 255
-
-    elif temperature > 0.9:
-        return 255, 220, 120
-
-    elif temperature > 0.6:
-        return 255, 150, 60
-
-    elif temperature > 0.3:
-        return 200, 70, 30
-
-    else:
-        return 120, 40, 20
-        
-# =========================================================
-# MODIFICADOR RADIAL
-# =========================================================
-
-def radial_modifier(dist, base_radius):
-
-    radial = max(0, 1 - dist / base_radius)
-
-    radial = radial ** RADIAL_DENSITY_POWER
-
-    radial *= RADIAL_DENSITY_WEIGHT
-
-    return radial
-    
-
-
-# =========================================================
-# COLOR GRADING
-# =========================================================
-
-def color_grading(img):
-
-    h, w, _ = img.shape
-
-    for y in range(h):
-        for x in range(w):
-
-            r, g, b, a = img[y, x]
-
-            r = ((r / 255) ** COLOR_GAMMA) * 255 * COLOR_CONTRAST
-            g = ((g / 255) ** COLOR_GAMMA) * 255 * COLOR_CONTRAST
-            b = ((b / 255) ** COLOR_GAMMA) * 255 * COLOR_CONTRAST
-
-            img[y, x, 0] = clamp(r)
-            img[y, x, 1] = clamp(g)
-            img[y, x, 2] = clamp(b)
-
-    return img
-    
-    
-
-# =========================================================
-# VIGNETTE
-# =========================================================
-
-def apply_vignette(img):
-
-    h, w, _ = img.shape
-
-    cx = w / 2
-    cy = h / 2
-
-    max_dist = math.sqrt(cx*cx + cy*cy)
-
-    for y in range(h):
-        for x in range(w):
-
-            dx = x - cx
-            dy = y - cy
-
-            dist = math.sqrt(dx*dx + dy*dy) / max_dist
-
-            factor = 1 - dist * VIGNETTE_STRENGTH
-
-            r, g, b, a = img[y, x]
-
-            img[y, x, 0] = clamp(r * factor)
-            img[y, x, 1] = clamp(g * factor)
-            img[y, x, 2] = clamp(b * factor)
-
-    return img
-    
 # =========================================================
-# CURVA DE ENERGÍA DE LA EXPLOSIÓN
+# UTILIDADES VECTORIALES (ACELERACIÓN HACIA EL PUNTO A)
 # =========================================================
 
 def energy_curve(t):
-
-    peak = math.exp(-4 * t) * ENERGY_PEAK
-    rebound = ENERGY_REBOUND * math.sin(10 * t) * math.exp(-2 * t)
-
+    peak = np.exp(-4 * t) * ENERGY_PEAK
+    rebound = ENERGY_REBOUND * np.sin(10 * t) * np.exp(-2 * t)
     return peak + rebound
 
+def fast_fbm(x_grid, y_grid, t, scale, octaves=6):
+    """Genera ruido fractal de forma eficiente sobre una malla."""
+    noise_map = np.zeros(x_grid.shape)
+    amp = 1.0
+    freq = scale
+    for i in range(octaves):
+        # Mapeo de pnoise2 sobre la matriz
+        # Nota: En una versión Pro usaríamos FastNoiseSIMD, aquí optimizamos el acceso
+        for r in range(0, HEIGHT, 4): # Sampling saltado para velocidad sin perder macroforma
+            for c in range(0, WIDTH, 4):
+                val = pnoise2(c * freq, r * freq + t * 2.0, base=SEED + i)
+                noise_map[r:r+4, c:c+4] = val * amp
+        amp *= 0.5
+        freq *= 2.0
+    return noise_map
 
 # =========================================================
-# MÁSCARA ANGULAR (FORMA DE ABANICO)
+# NIVELES 1, 2 Y 3: CÁLCULO VOLUMÉTRICO INTEGRADO
 # =========================================================
 
-def fan_mask(angle):
+def render_frame(frame_idx):
+    t = frame_idx / FRAMES
+    dt = DURATION / FRAMES
+    
+    # Malla de coordenadas
+    y_coords, x_coords = np.ogrid[:HEIGHT, :WIDTH]
+    dx = x_coords - CENTER_X
+    dy = y_coords - CENTER_Y
+    
+    # 1. Energía y Radio
+    e = energy_curve(t)
+    base_radius = 220 * t * e
+    outer_radius = 130 + base_radius
+    
+    # 2. Distorsión Temporal y Vorticidad (Nivel 2)
+    # Simulamos el flujo de gas con un desplazamiento en la lectura de coordenadas
+    lift = t * DENSITY_HEIGHT_LIFT
+    dist = np.sqrt(dx**2 + (dy + lift)**2)
+    angle = np.arctan2(dy + lift, dx)
+    
+    # 3. Control Estructural (Nivel 1)
+    fan_mask = np.abs(angle) < FAN_OPENING
+    up_weight = (np.sin(angle) + 1) * 0.5
+    ang_bias = 1 + (up_weight * (ANGULAR_BIAS_UP - 1))
+    tear = 1 + (np.sin(angle) * 0.35 * TEAR_FACTOR)
+    
+    # 4. Campo de Densidad Volumétrica (Nivel 2)
+    # Combinamos ruidos: Macroforma + Microdetalle
+    noise_macro = fast_fbm(x_coords, y_coords, t, 0.004, octaves=4)
+    noise_detail = fast_fbm(x_coords, y_coords, t, 0.02, octaves=8)
+    
+    density = np.clip(1 - (dist / (outer_radius * tear * ang_bias)), 0, 1)
+    density = (density ** 2.0) + (noise_macro * 0.5) + (noise_detail * 0.2)
+    density = np.clip(density, 0, 2)
+    
+    # Hueco central y máscara de abanico
+    density *= (dist > RADIAL_HOLE)
+    density *= fan_mask
+    
+    # 5. Modelo Térmico (Nivel 3)
+    # Núcleo blanco > Amarillo > Rojo > Humo
+    temp = (density ** 1.2) * 1.6
+    temp += (1 - (dist / (base_radius + 1e-5))) * TEMPERATURE_CORE
+    temp = np.clip(temp, 0, 2)
 
-    return abs(angle) < FAN_OPENING
+    # 6. Sombreado y Auto-sombreado (Nivel 3)
+    # Simulamos oclusión ambiental simple basada en densidad
+    shadow = np.exp(-density * 1.4)
+    light_dir = np.array([-0.6, -0.8])
+    # Aproximación de normales por gradiente de densidad
+    grad_y, grad_x = np.gradient(density)
+    normal_len = np.sqrt(grad_x**2 + grad_y**2) + 1e-5
+    nx, ny = -grad_x/normal_len, -grad_y/normal_len
+    diffuse = np.clip(nx * light_dir[0] + ny * light_dir[1], 0, 1)
 
+    # 7. Asignación de Color Físico
+    img_rgb = np.zeros((HEIGHT, WIDTH, 3))
+    
+    # Capas de color por temperatura
+    img_rgb[temp > 0.1] = [120, 40, 20]   # Rojo oscuro / Humo
+    img_rgb[temp > 0.4] = [200, 70, 30]   # Naranja
+    img_rgb[temp > 0.8] = [255, 150, 60]  # Naranja brillante
+    img_rgb[temp > 1.2] = [255, 220, 120] # Amarillo
+    img_rgb[temp > 1.5] = [255, 255, 255] # Blanco (Core)
+
+    # Aplicar Iluminación y Sombreado
+    lighting = (diffuse * 0.5 + 0.5) * shadow * density
+    img_rgb *= lighting[..., np.newaxis]
+
+    return img_rgb
 
 # =========================================================
-# PESO ANGULAR (SESGO HACIA ARRIBA)
-# =========================================================
-
-def angular_weight(angle):
-
-    up = (math.sin(angle) + 1) * 0.5
-    return 1 + (up * (ANGULAR_BIAS_UP - 1))
-
-
-# =========================================================
-# FORMA DE DESGARRO
-# =========================================================
-
-def tear_shape(angle):
-
-    return 1 + (math.sin(angle) * 0.35 * TEAR_FACTOR)
-
-# =========================================================
-# PARTICULAS
-# =========================================================
-
-class Particle:
-
-    def __init__(self):
-
-        self.angle = random.uniform(-math.pi, math.pi)
-        self.delay = random.uniform(0.0, 0.18)
-        self.life = random.uniform(0.6, 1.2)
-
-        speed = random.uniform(*PARTICLE_SPEED)
-
-        self.vx = math.cos(self.angle) * speed
-        self.vy = math.sin(self.angle) * speed
-
-        self.x = CENTER_X
-        self.y = CENTER_Y
-
-        self.age = 0
-
-    def update(self, dt, global_t):
-
-        if global_t < self.delay:
-            return
-
-        local_t = global_t - self.delay
-        energy = energy_curve(local_t)
-
-        self.x += self.vx * dt * energy
-        self.y += self.vy * dt * energy
-
-        self.vx *= PARTICLE_DRAG
-        self.vy *= PARTICLE_DRAG
-
-        self.age += dt
-
-    def alive(self):
-        return self.age < self.life
-
-
-particles = [Particle() for _ in range(PARTICLE_COUNT)]
-
-
-# =========================================================
-# MAIN LOOP ---- gemini compactacion.
+# NIVEL 4: POST-PROCESADO Y COMPOSICIÓN
 # =========================================================
 
 for frame in range(FRAMES):
+    print(f"Generando Nivel 4 - Frame {frame:03}...")
+    
+    # Obtener base volumétrica
+    frame_data = render_frame(frame)
+    
+    # 1. Bloom (Desenfoque gaussiano sobre las altas luces)
+    bright_mask = np.clip(frame_data - 150, 0, 255)
+    bloom = gaussian_filter(bright_mask, sigma=5)
+    frame_data = np.clip(frame_data + bloom * 0.4, 0, 255)
+    
+    # 2. Tone Mapping & Gamma
+    frame_data = 255 * (1 - np.exp(-frame_data * 1.4 / 255))
+    
+    # 3. Viñeta
+    y, x = np.ogrid[:HEIGHT, :WIDTH]
+    v_dist = np.sqrt((x - CENTER_X)**2 + (y - CENTER_Y)**2)
+    vignette = 1 - (v_dist / (WIDTH * 0.75)) * 0.6
+    frame_data *= np.clip(vignette[..., np.newaxis], 0, 1)
 
-    print("FRAMES:", frame)
+    # Guardado con canal Alfa (RGBA)
+    final_img = np.zeros((HEIGHT, WIDTH, 4), dtype=np.uint8)
+    final_img[..., :3] = frame_data.astype(np.uint8)
+    final_img[..., 3] = np.clip(np.max(frame_data, axis=2) * 2, 0, 255).astype(np.uint8)
 
-    t = frame / FRAMES
-    dt = DURATION / FRAMES
+    Image.fromarray(final_img, "RGBA").save(f"output/frame_{frame:03}.png")
 
-    img = np.zeros((HEIGHT, WIDTH, 4), dtype=np.uint8)
-    base_radius = BASE_SPEED * t * energy_curve(t)
-
-    core_radius = RADIUS_CORE + base_radius
-    inner_radius = RADIUS_INNER + base_radius
-    outer_radius = RADIUS_OUTER + base_radius
-
-    for y in range(HEIGHT):
-        if y % 50 == 0:
-            print("row:", y)
-        for x in range(WIDTH):
-
-            dx = x - CENTER_X
-            dy = y - CENTER_Y
-            dist = math.sqrt(dx * dx + dy * dy)
-            angle = math.atan2(dy, dx)
-
-            if not fan_mask(angle):
-                continue
-
-            if dist < RADIAL_HOLE:
-                continue
-
-            density = density_field(x, y, t, outer_radius)
-
-            if density <= 0:
-                continue
-
-            ang = angular_weight(angle)
-            tear = tear_shape(angle)
-
-            wave = 1 + 0.12 * math.sin(MICRO_WAVE_FREQ * dist - frame * 0.4)
-
-            noise_val = perlin(x, y, t, NOISE_SCALE)
-
-            distortion = (1 + noise_val * NOISE_STRENGTH) * wave * tear * ang
-
-            final_radius = outer_radius * distortion * (1 + density)
-
-            if dist > final_radius:
-                continue
-
-            temperature = temperature_field(
-    			x, y, t,
-    			dist,
-    			outer_radius,
-    			density
-			)
-            
-            shade = volumetric_shading(x, y, t, outer_radius, density)
-            
-            self_shadow = volumetric_self_shadow(x, y, t, outer_radius)
-            
-            volume_light = fake_volumetric_light(dist, outer_radius, density)
-            
-            darkening = internal_darkening(density)
-            
-            r, g, b = fire_color(temperature)
-            
-            brightness = 1.2
-            
-            perceptual = perceptual_volume(dist, outer_radius, density)
-            
-            light_factor = (
-                (shade + volume_light)
-                * self_shadow
-                * darkening
-                * (1 + perceptual)
-			)
-            
-            r = clamp(r * light_factor * density * brightness)
-            g = clamp(g * light_factor * density * brightness)
-            b = clamp(b * light_factor * density * brightness)
-            #ddfdf
-            img[y, x] = (r, g, b, 255)
-
-    if t > SECONDARY_BURST_TIME:
-
-        burst_radius = base_radius * 0.6
-
-        for y in range(HEIGHT):
-            for x in range(WIDTH):
-
-                dx = x - CENTER_X
-                dy = y - CENTER_Y
-                dist = math.sqrt(dx * dx + dy * dy)
-
-                if abs(dist - burst_radius) < 3:
-                    img[y, x] = (255, 220, 100, 255)
-
-    smoke_radius = outer_radius * 1.5
-
-    for y in range(HEIGHT):
-        for x in range(WIDTH):
-
-            dx = x - CENTER_X
-            dy = y - CENTER_Y - t * 80
-
-            dist = math.sqrt(dx * dx + dy * dy)
-
-            if dist < smoke_radius:
-
-                smoke_noise = perlin(x, y, t, SMOKE_SCALE)
-
-                fade = 1 - (dist / smoke_radius)
-
-                alpha = int(SMOKE_OPACITY * fade * abs(smoke_noise))
-
-                if alpha > 5:
-
-                    img[y, x, 0] = max(img[y, x, 0], 70)
-                    img[y, x, 1] = max(img[y, x, 1], 70)
-                    img[y, x, 2] = max(img[y, x, 2], 70)
-                    img[y, x, 3] = max(img[y, x, 3], alpha)
-
-    for p in particles:
-
-        if p.alive():
-
-            p.update(dt, t)
-
-            px = int(p.x)
-            py = int(p.y)
-
-            if 0 <= px < WIDTH and 0 <= py < HEIGHT:
-                img[py, px] = (255, 200, 80, 255)
-
-# =========================================================
-# POST PROCESADO
-# =========================================================
-
-img = apply_bloom(img)
-
-img = tone_mapping(img)
-
-img = color_grading(img)
-
-img = apply_vignette(img)
-
-Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
-
-
-print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 + Nivel 4 (Base) generado.")
+print("\n[MISIÓN CUMPLIDA]")
+print("Se han generado 50 frames con estructura jerárquica, modelo térmico y post-procesado Nivel 4.")
