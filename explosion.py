@@ -305,7 +305,7 @@ def apply_bloom(img):
 
             r, g, b, a = img[y, x]
 
-            brightness = (r + g + b) / 3
+            brightness = (float(r) + float(g) + float(b)) / 3
 
             if brightness < 180:
                 continue
@@ -947,6 +947,10 @@ def tone_mapping(img):
 
             r, g, b, a = img[y, x]
 
+            r = float(r)
+            g = float(g)
+            b = float(b)
+
             r = 255 * (1 - math.exp(-r * HDR_EXPOSURE / 255))
             g = 255 * (1 - math.exp(-g * HDR_EXPOSURE / 255))
             b = 255 * (1 - math.exp(-b * HDR_EXPOSURE / 255))
@@ -1191,6 +1195,8 @@ particles = [Particle() for _ in range(PARTICLE_COUNT)]
 
 for frame in range(FRAMES):
 
+    print("FRAMES:", frame)
+
     t = frame / FRAMES
     dt = DURATION / FRAMES
 
@@ -1202,6 +1208,8 @@ for frame in range(FRAMES):
     outer_radius = RADIUS_OUTER + base_radius
 
     for y in range(HEIGHT):
+        if y % 50 == 0:
+            print("row:", y)
         for x in range(WIDTH):
 
             dx = x - CENTER_X
@@ -1334,4 +1342,4 @@ img = apply_vignette(img)
 Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
 
-print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 (Auto sombreado) generado.")
+print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 + Nivel 4 (Base) generado.")
