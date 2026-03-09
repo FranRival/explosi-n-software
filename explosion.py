@@ -1190,7 +1190,7 @@ particles = [Particle() for _ in range(PARTICLE_COUNT)]
 
 
 # =========================================================
-# MAIN LOOP
+# MAIN LOOP ---- gemini compactacion.
 # =========================================================
 
 for frame in range(FRAMES):
