@@ -998,12 +998,18 @@ for frame in range(FRAMES):
     dt = DURATION / FRAMES
 
     img = np.zeros((HEIGHT, WIDTH, 4), dtype=np.uint8)
-    #aqui.
+    density_map = np.zeros((HEIGHT, WIDTH), dtype=np.float32)
+
     base_radius = BASE_SPEED * t * energy_curve(t)
 
     core_radius = RADIUS_CORE + base_radius
     inner_radius = RADIUS_INNER + base_radius
     outer_radius = RADIUS_OUTER + base_radius
+
+
+    # =====================================================
+    # PASS 1 — CALCULAR DENSIDAD
+    # =====================================================
 
     for y in range(HEIGHT):
         for x in range(WIDTH):
@@ -1038,30 +1044,54 @@ for frame in range(FRAMES):
             if dist > final_radius:
                 continue
 
+            density_map[y, x] = density
+
+
+    # =====================================================
+    # PASS 2 — SHADING Y COLOR
+    # =====================================================
+
+    for y in range(HEIGHT):
+        for x in range(WIDTH):
+
+            density = density_map[y, x]
+
+            if density <= 0:
+                continue
+
+            dx = x - CENTER_X
+            dy = y - CENTER_Y
+            dist = math.sqrt(dx * dx + dy * dy)
+
             temperature = temperature_field(
-    			x, y, t,
-    			dist,
-    			outer_radius,
-    			density
-			)
-            
+                x, y, t,
+                dist,
+                outer_radius,
+                density
+            )
+
             shade = volumetric_shading(x, y, t, outer_radius, density)
-            
+
             self_shadow = volumetric_self_shadow(x, y, t, outer_radius)
-            
+
             volume_light = fake_volumetric_light(dist, outer_radius, density)
-            
+
             r, g, b = fire_color(temperature)
-            
+
             brightness = 1.2
-            
+
             light_factor = shade + volume_light
-            
+
             r = clamp(r * light_factor * density * brightness)
             g = clamp(g * light_factor * density * brightness)
             b = clamp(b * light_factor * density * brightness)
-            #ddfdf
+
             img[y, x] = (r, g, b, 255)
+
+
+    # =====================================================
+    # BURST SECUNDARIO
+    # =====================================================
 
     if t > SECONDARY_BURST_TIME:
 
@@ -1076,6 +1106,11 @@ for frame in range(FRAMES):
 
                 if abs(dist - burst_radius) < 3:
                     img[y, x] = (255, 220, 100, 255)
+
+
+    # =====================================================
+    # HUMO
+    # =====================================================
 
     smoke_radius = outer_radius * 1.5
 
@@ -1102,6 +1137,11 @@ for frame in range(FRAMES):
                     img[y, x, 2] = max(img[y, x, 2], 70)
                     img[y, x, 3] = max(img[y, x, 3], alpha)
 
+
+    # =====================================================
+    # PARTICULAS
+    # =====================================================
+
     for p in particles:
 
         if p.alive():
@@ -1113,6 +1153,7 @@ for frame in range(FRAMES):
 
             if 0 <= px < WIDTH and 0 <= py < HEIGHT:
                 img[py, px] = (255, 200, 80, 255)
+
 
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
