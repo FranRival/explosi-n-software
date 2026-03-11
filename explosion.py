@@ -1,7 +1,8 @@
 # ==========================
 # EJECUCION
 # C:\Users\dell\explosion_env\Scripts\python.exe C:\Users\dell\explosion-software\explosion.py
-# ===============
+# ===============el problema del codigo, es la arquitectura acumulativa. se ha vuelto imposible renderizar nada. 
+#hay que trabajar desde la version estable. 3 commits de avance antes
 
 import os
 import math
