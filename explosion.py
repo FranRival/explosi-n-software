@@ -998,6 +998,7 @@ for frame in range(FRAMES):
     dt = DURATION / FRAMES
 
     img = np.zeros((HEIGHT, WIDTH, 4), dtype=np.uint8)
+    #aqui.
     base_radius = BASE_SPEED * t * energy_curve(t)
 
     core_radius = RADIUS_CORE + base_radius
