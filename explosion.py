@@ -357,6 +357,27 @@ def fbm_deep(x, y, t, scale):
 
 
 # =========================================================
+# GENERADOR DE CAMPOS DE RUIDO (FASE 4)
+# =========================================================
+
+def generate_noise_field(scale, t, offset_x=0, offset_y=0):
+
+    field = np.zeros((HEIGHT, WIDTH), dtype=np.float32)
+
+    for y in range(HEIGHT):
+        for x in range(WIDTH):
+
+            field[y, x] = pnoise2(
+                (x + offset_x) * scale,
+                (y + offset_y) * scale + t * 2.0,
+                repeatx=1024,
+                repeaty=1024,
+                base=SEED
+            )
+
+    return field
+
+# =========================================================
 # MULTI SCALE FRACTAL NOISE
 # =========================================================
 
@@ -604,30 +625,31 @@ def density_field(x, y, t, base_radius):
     # fractal brownian motion
 
     fbm_macro = fbm(x, y, t, FBM_SCALE_MACRO)
-    fbm_detail = fbm(x + 500, y + 500, t, FBM_SCALE_DETAIL)
+    fbm_macro = noise_macro[y, x]
+	fbm_detail = noise_detail[y, x]
     fbm_value = (fbm_macro * 0.7 + fbm_detail * 0.3) * FBM_STRENGTH
 
     # ruido fractal profundo
 
-    fbm_micro = fbm_deep(x + 1200, y + 1200, t, FBM_DEEP_SCALE)
+    fbm_micro = noise_micro[y, x]
     fbm_micro *= FBM_DEEP_STRENGTH
 
     # multi scale noise
 
-    fbm_super = fbm_super_macro(x - 800, y - 800, t)
+    fbm_super = noise_super[y, x]
     fbm_super *= FBM_SUPER_MACRO_STRENGTH
 
-    fbm_fine = fbm_fine_detail(x + 2000, y + 2000, t)
+    fbm_fine = noise_fine[y, x]
     fbm_fine *= FBM_FINE_STRENGTH
 
     # macro forma
 
-    macro_shape = macro_shape_noise(x - 3000, y - 3000, t)
+    macro_shape = noise_macro_shape[y, x]
     macro_shape *= MACRO_SHAPE_STRENGTH
 
     # micro detalle
 
-    micro_detail = micro_detail_noise(x + 3500, y + 3500, t)
+    micro_detail = noise_micro_detail[y, x]
     micro_detail *= MICRO_DETAIL_STRENGTH
 
     # influencia de altura
@@ -1013,6 +1035,21 @@ for frame in range(FRAMES):
 
     t = frame / FRAMES
     dt = DURATION / FRAMES
+    
+    # =====================================================
+	# FASE 4 — CAMPOS DE RUIDO POR FRAME
+	# =====================================================
+
+	noise_macro = generate_noise_field(FBM_SCALE_MACRO, t)
+	noise_detail = generate_noise_field(FBM_SCALE_DETAIL, t, 500, 500)
+	noise_micro = generate_noise_field(FBM_DEEP_SCALE, t, 1200, 1200)
+
+	noise_super = generate_noise_field(FBM_SUPER_MACRO_SCALE, t, -800, -800)
+	noise_fine = generate_noise_field(FBM_FINE_SCALE, t, 2000, 2000)
+
+	noise_macro_shape = generate_noise_field(MACRO_SHAPE_SCALE, t, -3000, -3000)
+	noise_micro_detail = generate_noise_field(MICRO_DETAIL_SCALE, t, 3500, 3500)
+
 
     img = np.zeros((HEIGHT, WIDTH, 4), dtype=np.uint8)
     density_map = np.zeros((HEIGHT, WIDTH), dtype=np.float32)
