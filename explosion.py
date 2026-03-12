@@ -1037,10 +1037,10 @@ for frame in range(FRAMES):
             angle = math.atan2(dy, dx)
             
             if not fan_mask(angle):
-    			continue
-
-			if dist < RADIAL_HOLE:
-    			continue
+                continue
+            
+            if dist < RADIAL_HOLE:
+                continue
 
             if not fan_mask(angle):
                 continue
