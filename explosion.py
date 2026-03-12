@@ -23,6 +23,21 @@ DURATION = 1.3
 CENTER_X = WIDTH // 2
 CENTER_Y = HEIGHT // 2
 
+# =========================================================
+# FASE 3 — MAPAS GEOMÉTRICOS PRECOMPUTADOS
+# =========================================================
+
+x_coords = np.arange(WIDTH)
+y_coords = np.arange(HEIGHT)
+
+X, Y = np.meshgrid(x_coords, y_coords)
+
+DX = X - CENTER_X
+DY = Y - CENTER_Y
+
+DIST_MAP = np.sqrt(DX**2 + DY**2)
+ANGLE_MAP = np.arctan2(DY, DX)
+
 RADIAL_DENSITY_WEIGHT = 1.4
 RADIAL_DENSITY_POWER = 1.6
 
@@ -792,8 +807,8 @@ def density_normal(x, y, density_map):
 
 def simulated_light_direction(x, y):
 
-    lx = x - CENTER_X
-    ly = y - CENTER_Y
+    lx = DX[y, x]
+    ly = DY[y, x]
 
     length = math.sqrt(lx * lx + ly * ly) + 1e-5
 
@@ -1020,6 +1035,12 @@ for frame in range(FRAMES):
             dy = y - CENTER_Y
             dist = math.sqrt(dx * dx + dy * dy)
             angle = math.atan2(dy, dx)
+            
+            if not fan_mask(angle):
+    			continue
+
+			if dist < RADIAL_HOLE:
+    			continue
 
             if not fan_mask(angle):
                 continue
@@ -1061,9 +1082,7 @@ for frame in range(FRAMES):
             if density <= 0:
                 continue
 
-            dx = x - CENTER_X
-            dy = y - CENTER_Y
-            dist = math.sqrt(dx * dx + dy * dy)
+            dist = DIST_MAP[y, x]
 
             temperature = temperature_field(
                 x, y, t,
