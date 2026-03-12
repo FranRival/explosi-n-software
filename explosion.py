@@ -745,15 +745,21 @@ def thermal_transition(dist, base_radius):
 # GRADIENTE DE DENSIDAD
 # =========================================================
 
-def density_gradient(x, y, t, base_radius):
+def density_gradient(x, y, density_map):
 
     step = DENSITY_GRADIENT_STEP
 
-    d1 = density_field(x + step, y, t, base_radius)
-    d2 = density_field(x - step, y, t, base_radius)
+    x1 = min(WIDTH - 1, x + step)
+    x2 = max(0, x - step)
 
-    d3 = density_field(x, y + step, t, base_radius)
-    d4 = density_field(x, y - step, t, base_radius)
+    y1 = min(HEIGHT - 1, y + step)
+    y2 = max(0, y - step)
+
+    d1 = density_map[y, x1]
+    d2 = density_map[y, x2]
+
+    d3 = density_map[y1, x]
+    d4 = density_map[y2, x]
 
     grad_x = (d1 - d2) / (2 * step)
     grad_y = (d3 - d4) / (2 * step)
@@ -765,11 +771,10 @@ def density_gradient(x, y, t, base_radius):
 # APROXIMACIÓN DE NORMALES VOLUMÉTRICAS
 # =========================================================
 
-def density_normal(x, y, t, base_radius):
+def density_normal(x, y, density_map):
 
-    grad_x, grad_y = density_gradient(x, y, t, base_radius)
+    grad_x, grad_y = density_gradient(x, y, density_map)
 
-    # invertir gradiente (superficie del volumen)
     nx = -grad_x
     ny = -grad_y
 
@@ -803,7 +808,7 @@ def simulated_light_direction(x, y):
 # AUTO SOMBREADO VOLUMÉTRICO
 # =========================================================
 
-def volumetric_self_shadow(x, y, t, base_radius):
+def volumetric_self_shadow(x, y, density_map):
 
     light_x, light_y = simulated_light_direction(x, y)
 
@@ -811,15 +816,13 @@ def volumetric_self_shadow(x, y, t, base_radius):
 
     for i in range(1, SELF_SHADOW_STEPS + 1):
 
-        sx = x - light_x * i * SELF_SHADOW_STEP_SIZE
-        sy = y - light_y * i * SELF_SHADOW_STEP_SIZE
+        sx = int(x - light_x * i * SELF_SHADOW_STEP_SIZE)
+        sy = int(y - light_y * i * SELF_SHADOW_STEP_SIZE)
 
         if sx < 0 or sx >= WIDTH or sy < 0 or sy >= HEIGHT:
             continue
 
-        d = density_field(sx, sy, t, base_radius)
-
-        shadow_density += d
+        shadow_density += density_map[sy, sx]
 
     shadow = math.exp(-shadow_density * SELF_SHADOW_STRENGTH)
 
@@ -829,13 +832,12 @@ def volumetric_self_shadow(x, y, t, base_radius):
 # =========================================================
 
 
-def volumetric_shading(x, y, t, base_radius, density):
+def volumetric_shading(x, y, density_map, density):
 
-    normal_x, normal_y = density_normal(x, y, t, base_radius)
+    normal_x, normal_y = density_normal(x, y, density_map)
 
     light_x, light_y = simulated_light_direction(x, y)
 
-    # iluminación direccional simulada
     light = normal_x * light_x + normal_y * light_y
     light = max(0, light)
 
@@ -1070,9 +1072,9 @@ for frame in range(FRAMES):
                 density
             )
 
-            shade = volumetric_shading(x, y, t, outer_radius, density)
+            shade = volumetric_shading(x, y, density_map, density)
 
-            self_shadow = volumetric_self_shadow(x, y, t, outer_radius)
+			self_shadow = volumetric_self_shadow(x, y, density_map)
 
             volume_light = fake_volumetric_light(dist, outer_radius, density)
 
