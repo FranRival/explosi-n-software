@@ -1073,8 +1073,8 @@ for frame in range(FRAMES):
             )
 
             shade = volumetric_shading(x, y, density_map, density)
-
-			self_shadow = volumetric_self_shadow(x, y, density_map)
+            
+            self_shadow = volumetric_self_shadow(x, y, density_map)
 
             volume_light = fake_volumetric_light(dist, outer_radius, density)
 
