@@ -587,6 +587,9 @@ def mass_compression(dist, base_radius):
 
 def density_field(x, y, t, base_radius):
 
+    ix = x
+    iy = y
+
     dx = x - CENTER_X
     dy = y - CENTER_Y
 
@@ -624,32 +627,32 @@ def density_field(x, y, t, base_radius):
 
     # fractal brownian motion
 
-    fbm_macro = fbm(x, y, t, FBM_SCALE_MACRO)
-    fbm_macro = noise_macro[y, x]
-	fbm_detail = noise_detail[y, x]
+    
+    fbm_macro = noise_macro[iy, ix]
+    fbm_detail = noise_detail[iy, ix]
     fbm_value = (fbm_macro * 0.7 + fbm_detail * 0.3) * FBM_STRENGTH
 
     # ruido fractal profundo
 
-    fbm_micro = noise_micro[y, x]
+    fbm_micro = noise_micro[iy, ix]
     fbm_micro *= FBM_DEEP_STRENGTH
 
     # multi scale noise
 
-    fbm_super = noise_super[y, x]
+    fbm_super = noise_super[iy, ix]
     fbm_super *= FBM_SUPER_MACRO_STRENGTH
 
-    fbm_fine = noise_fine[y, x]
+    fbm_fine = noise_fine[iy, ix]
     fbm_fine *= FBM_FINE_STRENGTH
 
     # macro forma
 
-    macro_shape = noise_macro_shape[y, x]
+    macro_shape = noise_macro_shape[iy, ix]
     macro_shape *= MACRO_SHAPE_STRENGTH
 
     # micro detalle
 
-    micro_detail = noise_micro_detail[y, x]
+    micro_detail = noise_micro_detail[iy, ix]
     micro_detail *= MICRO_DETAIL_STRENGTH
 
     # influencia de altura
@@ -1039,16 +1042,16 @@ for frame in range(FRAMES):
     # =====================================================
 	# FASE 4 — CAMPOS DE RUIDO POR FRAME
 	# =====================================================
-
-	noise_macro = generate_noise_field(FBM_SCALE_MACRO, t)
-	noise_detail = generate_noise_field(FBM_SCALE_DETAIL, t, 500, 500)
-	noise_micro = generate_noise_field(FBM_DEEP_SCALE, t, 1200, 1200)
-
-	noise_super = generate_noise_field(FBM_SUPER_MACRO_SCALE, t, -800, -800)
-	noise_fine = generate_noise_field(FBM_FINE_SCALE, t, 2000, 2000)
-
-	noise_macro_shape = generate_noise_field(MACRO_SHAPE_SCALE, t, -3000, -3000)
-	noise_micro_detail = generate_noise_field(MICRO_DETAIL_SCALE, t, 3500, 3500)
+    
+    noise_macro = generate_noise_field(FBM_SCALE_MACRO, t)
+    noise_detail = generate_noise_field(FBM_SCALE_DETAIL, t, 500, 500)
+    noise_micro = generate_noise_field(FBM_DEEP_SCALE, t, 1200, 1200)
+    
+    noise_super = generate_noise_field(FBM_SUPER_MACRO_SCALE, t, -800, -800)
+    noise_fine = generate_noise_field(FBM_FINE_SCALE, t, 2000, 2000)
+    
+    noise_macro_shape = generate_noise_field(MACRO_SHAPE_SCALE, t, -3000, -3000)
+    noise_micro_detail = generate_noise_field(MICRO_DETAIL_SCALE, t, 3500, 3500)
 
 
     img = np.zeros((HEIGHT, WIDTH, 4), dtype=np.uint8)
@@ -1079,11 +1082,6 @@ for frame in range(FRAMES):
             if dist < RADIAL_HOLE:
                 continue
 
-            if not fan_mask(angle):
-                continue
-
-            if dist < RADIAL_HOLE:
-                continue
 
             density = density_field(x, y, t, outer_radius)
 
