@@ -1067,48 +1067,48 @@ for frame in range(FRAMES):
 	# =====================================================
 	# FASE 5 — MÁSCARAS VECTORIALES
 	# =====================================================
-
-	dist_map = DIST_MAP
-	angle_map = ANGLE_MAP
-
-	mask_fan = np.abs(angle_map) < FAN_OPENING
-	mask_hole = dist_map > RADIAL_HOLE
-
-	explosion_mask = mask_fan & mask_hole
+    # 
+    dist_map = DIST_MAP
+    angle_map = ANGLE_MAP
+    
+    mask_fan = np.abs(angle_map) < FAN_OPENING
+    mask_hole = dist_map > RADIAL_HOLE
+    
+    explosion_mask = mask_fan & mask_hole
     ys, xs = np.where(explosion_mask)
 
     # =====================================================
-# PASS 1 — CALCULAR DENSIDAD (FASE 5)
-# =====================================================
+    # PASS 1 — CALCULAR DENSIDAD (FASE 5)
+    # =====================================================
 
-for i in range(len(xs)):
+    for i in range(len(xs)):
 
-    x = xs[i]
-    y = ys[i]
+        x = xs[i]
+        y = ys[i]
 
-    dist = DIST_MAP[y, x]
-    angle = ANGLE_MAP[y, x]
+        dist = DIST_MAP[y, x]
+        angle = ANGLE_MAP[y, x]
 
-    density = density_field(x, y, t, outer_radius)
+        density = density_field(x, y, t, outer_radius)
 
-    if density <= 0:
-        continue
+        if density <= 0:
+            continue
 
-    ang = angular_weight(angle)
-    tear = tear_shape(angle)
+        ang = angular_weight(angle)
+        tear = tear_shape(angle)
 
-    wave = 1 + 0.12 * math.sin(MICRO_WAVE_FREQ * dist - frame * 0.4)
+        wave = 1 + 0.12 * math.sin(MICRO_WAVE_FREQ * dist - frame * 0.4)
 
-    noise_val = perlin(x, y, t, NOISE_SCALE)
+        noise_val = perlin(x, y, t, NOISE_SCALE)
 
-    distortion = (1 + noise_val * NOISE_STRENGTH) * wave * tear * ang
+        distortion = (1 + noise_val * NOISE_STRENGTH) * wave * tear * ang
 
-    final_radius = outer_radius * distortion * (1 + density)
+        final_radius = outer_radius * distortion * (1 + density)
 
-    if dist > final_radius:
-        continue
+        if dist > final_radius:
+            continue
 
-    density_map[y, x] = density
+        density_map[y, x] = density
 
 
     # =====================================================

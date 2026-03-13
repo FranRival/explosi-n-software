@@ -3,10 +3,10 @@ from PIL import Image
 from pathlib import Path
 
 # ======================================
-# CONFIGURACION
+# SOFTWARE ---- buscar entre la carpeta de imagenes las que menos pixeles tengan.
 # ======================================
 
-carpeta = Path(r"C:\Users\dell\explosion-software\versiones-resultados\nivel 2\4. Masa volumetrica\v4-4-3 - Masa volumetrica - Volumen aparente")  # <-- cambia esto
+carpeta = Path(r"C:\Users\dell\Desktop\nivel 5")  # <-- cambia esto
 
 fps = 24
 
