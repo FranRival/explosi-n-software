@@ -2,21 +2,27 @@
 #### NIVEL 1 - 
 <figure class="wp-block-image size-large"><img src="https://images2.imgbox.com/83/17/CgdTutCC_o.gif" alt="explosion"/></figure>
 
+- Tiempo de renderizado: 6 a 8 min. por frame. 
+
 #### NIVEL 2 -
 <figure class="wp-block-image size-large"><img src="https://images2.imgbox.com/29/39/j0zlOu5Y_o.gif" alt="explosion"/></figure>
+
+- Tiempo de renderizado: 2 a 3 min. por frame. 
 
 #### NIVEL 3
 <figure class="wp-block-image size-large"><img src="https://images2.imgbox.com/56/d7/NeFWDOWT_o.gif" alt="explosion"/></figure>
 
+- Tiempo de renderizado: 6 a 8 min. por frame. 
 
 #### NIVEL 4
 <figure class="wp-block-image size-large"><img src="https://images2.imgbox.com/19/e7/OqtpORrL_o.gif" alt="explosion"/></figure>
 
+- Tiempo de renderizado: 1 a 2 min. por frame. 
 
 #### NIVEL 5
 <figure class="wp-block-image size-large"><img src="https://images2.imgbox.com/f5/05/dZsQ5p9v_o.gif" alt="explosion"/></figure>
 
-
+- Tiempo de renderizado: 2 a 3 min. por frame. 
 
 ### Nivel 0 — Base física de la explosión
 	•	- Sistema de partículas
