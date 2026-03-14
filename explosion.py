@@ -272,7 +272,7 @@ VOLUME_LIGHT_RADIUS = 0.7
 
 SELF_SHADOW_STEPS = 6
 SELF_SHADOW_STEP_SIZE = 6
-SELF_SHADOW_STRENGTH = 1.4
+SELF_SHADOW_STRENGTH = 0.35
 
 
 # tamaño del paso para gradiente
@@ -1136,7 +1136,7 @@ for frame in range(FRAMES):
 
             brightness = 1.2
 
-            light_factor = shade + volume_light
+            light_factor = (shade * self_shadow) + volume_light
 
             r = clamp(r * light_factor * density * brightness)
             g = clamp(g * light_factor * density * brightness)
