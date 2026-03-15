@@ -299,6 +299,14 @@ VISUAL_DEPTH_POWER = 1.5
 VISUAL_EDGE_BRIGHTNESS = 0.6
 
 # =========================================================
+# BLOOM
+# =========================================================
+
+BLOOM_THRESHOLD = 200
+BLOOM_RADIUS = 4
+BLOOM_STRENGTH = 0.7
+
+# =========================================================
 # UTILIDADES
 # =========================================================
 
@@ -967,6 +975,55 @@ def volumetric_shading(x, y, density_map, density):
     
 
 # =========================================================
+# BLOOM POSTPROCESS
+# =========================================================
+
+def apply_bloom(img):
+
+    height, width, _ = img.shape
+
+    bloom = np.zeros_like(img, dtype=np.float32)
+
+    for y in range(height):
+        for x in range(width):
+
+            r, g, b, a = img[y, x]
+
+            brightness = (r + g + b) / 3
+
+            if brightness < BLOOM_THRESHOLD:
+                continue
+
+            for dy in range(-BLOOM_RADIUS, BLOOM_RADIUS + 1):
+                for dx in range(-BLOOM_RADIUS, BLOOM_RADIUS + 1):
+
+                    nx = x + dx
+                    ny = y + dy
+
+                    if nx < 0 or nx >= width or ny < 0 or ny >= height:
+                        continue
+
+                    dist = math.sqrt(dx*dx + dy*dy)
+
+                    if dist > BLOOM_RADIUS:
+                        continue
+
+                    falloff = 1 - dist / BLOOM_RADIUS
+
+                    bloom[ny, nx, 0] += r * falloff
+                    bloom[ny, nx, 1] += g * falloff
+                    bloom[ny, nx, 2] += b * falloff
+
+    img = img.astype(np.float32)
+
+    img[:, :, 0:3] += bloom[:, :, 0:3] * BLOOM_STRENGTH
+
+    img = np.clip(img, 0, 255)
+
+    return img.astype(np.uint8)
+    
+    
+# =========================================================
 # ILUMINACIÓN VOLUMÉTRICA FALSA
 # =========================================================
 
@@ -1291,7 +1348,9 @@ for frame in range(FRAMES):
                 img[py, px] = (255, 200, 80, 255)
 
 
+	img = apply_bloom(img)
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
+    
 
 
 print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 (Modelo térmico continuo) generado.")
