@@ -278,6 +278,17 @@ SELF_SHADOW_STRENGTH = 0.35
 # tamaño del paso para gradiente
 DENSITY_GRADIENT_STEP = 2
 
+# =========================================================
+# VOLUMEN PERCEPTUAL
+# =========================================================
+
+PERCEPTUAL_EDGE_STRENGTH = 0.9
+PERCEPTUAL_EDGE_POWER = 1.8
+
+PERCEPTUAL_CORE_BOOST = 1.2
+PERCEPTUAL_CORE_POWER = 1.6
+
+PERCEPTUAL_DEPTH_CONTRAST = 0.8
 
 # =========================================================
 # UTILIDADES
@@ -868,8 +879,44 @@ def volumetric_self_shadow(x, y, density_map):
 
     return shadow
 # =========================================================
+# 
+# =========================================================
+
+# =========================================================
+# VOLUMEN PERCEPTUAL: edge thinning > bordes mas finos
+#core bost > nucleo mas profundo
+# depth contrans > contraste interno
+# =========================================================
+
+def perceptual_volume(dist, base_radius, density):
+
+    ratio = dist / (base_radius + 1e-5)
+
+    if ratio > 1:
+        return 0
+
+    # afinado de bordes
+    edge = (1 - ratio)
+    edge = edge ** PERCEPTUAL_EDGE_POWER
+    edge *= PERCEPTUAL_EDGE_STRENGTH
+
+    # refuerzo del núcleo
+    core = density ** PERCEPTUAL_CORE_POWER
+    core *= PERCEPTUAL_CORE_BOOST
+
+    # contraste interno del volumen
+    depth = density * PERCEPTUAL_DEPTH_CONTRAST
+
+    volume = edge + core + depth
+
+    return volume
+
+
+# =========================================================
 # SOMBREADO VOLUMÉTRICO
 # =========================================================
+
+
 
 
 def volumetric_shading(x, y, density_map, density):
@@ -1132,11 +1179,14 @@ for frame in range(FRAMES):
 
             volume_light = fake_volumetric_light(dist, outer_radius, density)
 
+            perceptual = perceptual_volume(dist, outer_radius, density)
+
+
             r, g, b = fire_color(temperature)
 
             brightness = 1.2
 
-            light_factor = (shade * self_shadow) + volume_light
+            light_factor = ((shade * self_shadow) + volume_light) * (1 + perceptual)
 
             r = clamp(r * light_factor * density * brightness)
             g = clamp(g * light_factor * density * brightness)

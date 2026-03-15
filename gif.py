@@ -6,7 +6,7 @@ from pathlib import Path
 # CONFIGURACION
 # ======================================
 
-carpeta = Path(r"C:\Users\dell\explosion-software\versiones-resultados\nivel 2\4. Masa volumetrica\v4-4-3 - Masa volumetrica - Volumen aparente")  # <-- cambia esto
+carpeta = Path(r"C:\Users\dell\explosion-software\versiones-resultados\nivel 3\3. Autosombreado\2.Oscurecimiento interno")  # <-- cambia esto
 
 fps = 24
 
@@ -56,3 +56,7 @@ if imagenes:
 
 else:
     print("No se encontraron imágenes.")
+
+
+
+
