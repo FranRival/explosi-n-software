@@ -989,7 +989,7 @@ def apply_bloom(img):
 
             r, g, b, a = img[y, x]
 
-            brightness = (r + g + b) / 3
+            brightness = (int(r) + int(g) + int(b)) / 3
 
             if brightness < BLOOM_THRESHOLD:
                 continue
@@ -1353,4 +1353,4 @@ for frame in range(FRAMES):
     
 
 
-print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 (Modelo térmico continuo) generado.")
+print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 + Nivel 4 (Bloom) generado.")
