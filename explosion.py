@@ -291,6 +291,14 @@ PERCEPTUAL_CORE_POWER = 1.6
 PERCEPTUAL_DEPTH_CONTRAST = 0.8
 
 # =========================================================
+# PROFUNDIDAD VISUAL
+# =========================================================
+
+VISUAL_DEPTH_STRENGTH = 0.9
+VISUAL_DEPTH_POWER = 1.5
+VISUAL_EDGE_BRIGHTNESS = 0.6
+
+# =========================================================
 # UTILIDADES
 # =========================================================
 
@@ -912,6 +920,27 @@ def perceptual_volume(dist, base_radius, density):
     return volume
 
 
+
+# =========================================================
+# PROFUNDIDAD VISUAL
+# =========================================================
+
+def visual_depth(dist, base_radius, density):
+
+    ratio = dist / (base_radius + 1e-5)
+
+    if ratio > 1:
+        return 0
+
+    # interior del volumen
+    depth = (1 - ratio)
+    depth = depth ** VISUAL_DEPTH_POWER
+    depth *= VISUAL_DEPTH_STRENGTH
+
+    # bordes ligeramente más brillantes
+    edge = ratio * VISUAL_EDGE_BRIGHTNESS
+
+    return depth - edge * density
 # =========================================================
 # SOMBREADO VOLUMÉTRICO
 # =========================================================
@@ -1180,13 +1209,14 @@ for frame in range(FRAMES):
             volume_light = fake_volumetric_light(dist, outer_radius, density)
 
             perceptual = perceptual_volume(dist, outer_radius, density)
-
+            
+            depth = visual_depth(dist, outer_radius, density)
 
             r, g, b = fire_color(temperature)
 
             brightness = 1.2
 
-            light_factor = ((shade * self_shadow) + volume_light) * (1 + perceptual)
+            light_factor = ((shade * self_shadow) + volume_light) * (1 + perceptual) * (1 + depth)
 
             r = clamp(r * light_factor * density * brightness)
             g = clamp(g * light_factor * density * brightness)
