@@ -1347,9 +1347,11 @@ for frame in range(FRAMES):
             if 0 <= px < WIDTH and 0 <= py < HEIGHT:
                 img[py, px] = (255, 200, 80, 255)
 
-
-	img = apply_bloom(img)
+    
+    img = apply_bloom(img)
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
+
+    
     
 
 
