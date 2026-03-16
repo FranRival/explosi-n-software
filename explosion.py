@@ -342,6 +342,15 @@ SHOCKWAVE_DECAY = 2.0
 
 
 # =========================================================
+# HEAT DISTORTION
+# =========================================================
+
+HEAT_DISTORTION_STRENGTH = 6.0
+HEAT_DISTORTION_SCALE = 0.01
+HEAT_DISTORTION_TIME = 2.0
+HEAT_DISTORTION_THRESHOLD = 0.25
+
+# =========================================================
 # UTILIDADES
 # =========================================================
 
@@ -1188,7 +1197,52 @@ def color_grading(img):
     return img.astype(np.uint8)
 
 
+# =========================================================
+# HEAT DISTORTION
+# =========================================================
 
+def heat_distortion(img, temperature_map, t):
+
+    height, width, _ = img.shape
+
+    distorted = img.copy()
+
+    for y in range(height):
+        for x in range(width):
+
+            temp = temperature_map[y, x]
+
+            if temp < HEAT_DISTORTION_THRESHOLD:
+                continue
+
+            # ruido de distorsión
+            nx = pnoise2(
+                x * HEAT_DISTORTION_SCALE,
+                y * HEAT_DISTORTION_SCALE + t * HEAT_DISTORTION_TIME,
+                repeatx=1024,
+                repeaty=1024,
+                base=SEED
+            )
+
+            ny = pnoise2(
+                x * HEAT_DISTORTION_SCALE + 200,
+                y * HEAT_DISTORTION_SCALE + t * HEAT_DISTORTION_TIME,
+                repeatx=1024,
+                repeaty=1024,
+                base=SEED
+            )
+
+            temp_factor = (temp - HEAT_DISTORTION_THRESHOLD)
+
+			offset_x = int(nx * HEAT_DISTORTION_STRENGTH * temp_factor)
+			offset_y = int(ny * HEAT_DISTORTION_STRENGTH * temp_factor)
+
+            sx = min(width - 1, max(0, x + offset_x))
+            sy = min(height - 1, max(0, y + offset_y))
+
+            distorted[y, x] = img[sy, sx]
+
+    return distorted
 # =========================================================
 # SHOCKWAVE
 # =========================================================
@@ -1378,6 +1432,7 @@ for frame in range(FRAMES):
 
 
     img = np.zeros((HEIGHT, WIDTH, 4), dtype=np.uint8)
+    temperature_map = np.zeros((HEIGHT, WIDTH), dtype=np.float32)
     density_map = np.zeros((HEIGHT, WIDTH), dtype=np.float32)
 
     base_radius = BASE_SPEED * t * energy_curve(t)
@@ -1460,12 +1515,14 @@ for frame in range(FRAMES):
             depth = visual_depth(dist, outer_radius, density)
 
             r, g, b = fire_color(temperature)
+            
+            temperature_map[y, x] = temperature
 
             brightness = 1.2
 
             shock = shockwave_effect(x, y, t)
             
-            light_factor = ((shade * self_shadow) + volume_light + shock) * (1 + perceptual) * (1 + depth)
+            light_factor = ((shade * self_shadow) + volume_light + (shock * density)) * (1 + perceptual) * (1 + depth)
 
             r = clamp(r * light_factor * density * brightness)
             g = clamp(g * light_factor * density * brightness)
@@ -1540,9 +1597,10 @@ for frame in range(FRAMES):
                 img[py, px] = (255, 200, 80, 255)
 
     img = apply_bloom(img)
-    img = tone_mapping(img)
-    img = volumetric_smoothing(img)
-    img = color_grading(img)
+	img = tone_mapping(img)
+	img = volumetric_smoothing(img)
+	img = heat_distortion(img, temperature_map, t)
+	img = color_grading(img)
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
     
