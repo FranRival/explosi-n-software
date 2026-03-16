@@ -331,6 +331,15 @@ FIRE_WARMTH = 1.15
 FIRE_CONTRAST = 1.1
 FIRE_SHADOW = 0.85
 
+# =========================================================
+# SHOCKWAVE
+# =========================================================
+
+SHOCKWAVE_SPEED = 420
+SHOCKWAVE_WIDTH = 6
+SHOCKWAVE_INTENSITY = 1.8
+SHOCKWAVE_DECAY = 2.0
+
 
 # =========================================================
 # UTILIDADES
@@ -1179,6 +1188,31 @@ def color_grading(img):
     return img.astype(np.uint8)
 
 
+
+# =========================================================
+# SHOCKWAVE
+# =========================================================
+
+def shockwave_effect(x, y, t):
+
+    dx = x - CENTER_X
+    dy = y - CENTER_Y
+
+    dist = math.sqrt(dx*dx + dy*dy)
+
+    wave_radius = SHOCKWAVE_SPEED * t
+
+    ring = abs(dist - wave_radius)
+
+    if ring > SHOCKWAVE_WIDTH:
+        return 0
+
+    strength = 1 - (ring / SHOCKWAVE_WIDTH)
+
+    strength = strength ** SHOCKWAVE_DECAY
+
+    return strength * SHOCKWAVE_INTENSITY
+    
 # =========================================================
 # ILUMINACIÓN VOLUMÉTRICA FALSA
 # =========================================================
@@ -1429,7 +1463,9 @@ for frame in range(FRAMES):
 
             brightness = 1.2
 
-            light_factor = ((shade * self_shadow) + volume_light) * (1 + perceptual) * (1 + depth)
+            shock = shockwave_effect(x, y, t)
+
+			light_factor = ((shade * self_shadow) + volume_light + shock) * (1 + perceptual) * (1 + depth)
 
             r = clamp(r * light_factor * density * brightness)
             g = clamp(g * light_factor * density * brightness)
