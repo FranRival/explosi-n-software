@@ -306,6 +306,15 @@ BLOOM_THRESHOLD = 200
 BLOOM_RADIUS = 4
 BLOOM_STRENGTH = 0.7
 
+
+# =========================================================
+# TONE MAPPING (COMPRESIÓN TONAL)
+# =========================================================
+
+HDR_EXPOSURE = 1.4
+HDR_CONTRAST = 1.2
+
+
 # =========================================================
 # UTILIDADES
 # =========================================================
@@ -1022,7 +1031,41 @@ def apply_bloom(img):
 
     return img.astype(np.uint8)
     
+  
     
+    
+      
+# =========================================================
+# TONE MAPPING
+# =========================================================
+
+def tone_mapping(img):
+
+    img = img.astype(np.float32)
+
+    height, width, _ = img.shape
+
+    for y in range(height):
+        for x in range(width):
+
+            r, g, b, a = img[y, x]
+
+            # compresión exponencial
+            r = 255 * (1 - math.exp(-r * HDR_EXPOSURE / 255))
+            g = 255 * (1 - math.exp(-g * HDR_EXPOSURE / 255))
+            b = 255 * (1 - math.exp(-b * HDR_EXPOSURE / 255))
+
+            # ajuste de contraste
+            r = ((r - 128) * HDR_CONTRAST) + 128
+            g = ((g - 128) * HDR_CONTRAST) + 128
+            b = ((b - 128) * HDR_CONTRAST) + 128
+
+            img[y, x, 0] = clamp(r)
+            img[y, x, 1] = clamp(g)
+            img[y, x, 2] = clamp(b)
+
+    return img.astype(np.uint8)
+
 # =========================================================
 # ILUMINACIÓN VOLUMÉTRICA FALSA
 # =========================================================
@@ -1347,8 +1390,9 @@ for frame in range(FRAMES):
             if 0 <= px < WIDTH and 0 <= py < HEIGHT:
                 img[py, px] = (255, 200, 80, 255)
 
-    
-    img = apply_bloom(img)
+
+	img = apply_bloom(img)
+    img = tone_mapping(img)
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
     
