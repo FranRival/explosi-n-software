@@ -1464,8 +1464,8 @@ for frame in range(FRAMES):
             brightness = 1.2
 
             shock = shockwave_effect(x, y, t)
-
-			light_factor = ((shade * self_shadow) + volume_light + shock) * (1 + perceptual) * (1 + depth)
+            
+            light_factor = ((shade * self_shadow) + volume_light + shock) * (1 + perceptual) * (1 + depth)
 
             r = clamp(r * light_factor * density * brightness)
             g = clamp(g * light_factor * density * brightness)
@@ -1549,4 +1549,4 @@ for frame in range(FRAMES):
     
 
 
-print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 + Nivel 4 (Tone Mapping) generado.")
+print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 + Nivel 4 + Nivel 5 (Shockwave) generado.")
