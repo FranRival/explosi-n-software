@@ -321,6 +321,17 @@ HDR_CONTRAST = 1.2
 VOLUME_BLUR_RADIUS = 2
 VOLUME_BLUR_STRENGTH = 0.35
 
+
+# =========================================================
+# COLOR GRADING (CORRECCIÓN DE COLOR)
+# =========================================================
+
+FIRE_SATURATION = 1.25
+FIRE_WARMTH = 1.15
+FIRE_CONTRAST = 1.1
+FIRE_SHADOW = 0.85
+
+
 # =========================================================
 # UTILIDADES
 # =========================================================
@@ -1121,6 +1132,53 @@ def volumetric_smoothing(img):
 
     return smoothed.astype(np.uint8)
 
+
+# =========================================================
+# COLOR GRADING
+# =========================================================
+
+def color_grading(img):
+
+    img = img.astype(np.float32)
+
+    height, width, _ = img.shape
+
+    for y in range(height):
+        for x in range(width):
+
+            r, g, b, a = img[y, x]
+
+            # saturación del fuego
+            avg = (r + g + b) / 3
+
+            r = avg + (r - avg) * FIRE_SATURATION
+            g = avg + (g - avg) * FIRE_SATURATION
+            b = avg + (b - avg) * FIRE_SATURATION
+
+            # calor del fuego (más rojo/naranja)
+            r *= FIRE_WARMTH
+            g *= (FIRE_WARMTH * 0.9)
+
+            # contraste
+            r = ((r - 128) * FIRE_CONTRAST) + 128
+            g = ((g - 128) * FIRE_CONTRAST) + 128
+            b = ((b - 128) * FIRE_CONTRAST) + 128
+
+            # oscurecer zonas frías
+            brightness = (r + g + b) / 3
+
+            if brightness < 80:
+                r *= FIRE_SHADOW
+                g *= FIRE_SHADOW
+                b *= FIRE_SHADOW
+
+            img[y, x, 0] = clamp(r)
+            img[y, x, 1] = clamp(g)
+            img[y, x, 2] = clamp(b)
+
+    return img.astype(np.uint8)
+
+
 # =========================================================
 # ILUMINACIÓN VOLUMÉTRICA FALSA
 # =========================================================
@@ -1448,6 +1506,7 @@ for frame in range(FRAMES):
     img = apply_bloom(img)
     img = tone_mapping(img)
     img = volumetric_smoothing(img)
+    img = color_grading(img)
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
     
