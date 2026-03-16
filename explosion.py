@@ -1390,8 +1390,7 @@ for frame in range(FRAMES):
             if 0 <= px < WIDTH and 0 <= py < HEIGHT:
                 img[py, px] = (255, 200, 80, 255)
 
-
-	img = apply_bloom(img)
+    img = apply_bloom(img)
     img = tone_mapping(img)
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
@@ -1399,4 +1398,4 @@ for frame in range(FRAMES):
     
 
 
-print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 + Nivel 4 (Bloom) generado.")
+print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 + Nivel 4 (Tone Mapping) generado.")
