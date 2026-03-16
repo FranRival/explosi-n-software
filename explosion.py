@@ -314,6 +314,12 @@ BLOOM_STRENGTH = 0.7
 HDR_EXPOSURE = 1.4
 HDR_CONTRAST = 1.2
 
+# =========================================================
+# SUAVIZADO VOLUMÉTRICO
+# =========================================================
+
+VOLUME_BLUR_RADIUS = 2
+VOLUME_BLUR_STRENGTH = 0.35
 
 # =========================================================
 # UTILIDADES
@@ -1066,6 +1072,55 @@ def tone_mapping(img):
 
     return img.astype(np.uint8)
 
+
+
+# =========================================================
+# SUAVIZADO VOLUMÉTRICO
+# =========================================================
+
+def volumetric_smoothing(img):
+
+    height, width, _ = img.shape
+
+    smoothed = img.copy().astype(np.float32)
+
+    for y in range(height):
+        for x in range(width):
+
+            r_total = 0
+            g_total = 0
+            b_total = 0
+            count = 0
+
+            for dy in range(-VOLUME_BLUR_RADIUS, VOLUME_BLUR_RADIUS + 1):
+                for dx in range(-VOLUME_BLUR_RADIUS, VOLUME_BLUR_RADIUS + 1):
+
+                    nx = x + dx
+                    ny = y + dy
+
+                    if nx < 0 or nx >= width or ny < 0 or ny >= height:
+                        continue
+
+                    r, g, b, _ = img[ny, nx]
+
+                    r_total += r
+                    g_total += g
+                    b_total += b
+                    count += 1
+
+            r_avg = r_total / count
+            g_avg = g_total / count
+            b_avg = b_total / count
+
+            r0, g0, b0, a0 = img[y, x]
+
+            smoothed[y, x, 0] = r0 * (1 - VOLUME_BLUR_STRENGTH) + r_avg * VOLUME_BLUR_STRENGTH
+            smoothed[y, x, 1] = g0 * (1 - VOLUME_BLUR_STRENGTH) + g_avg * VOLUME_BLUR_STRENGTH
+            smoothed[y, x, 2] = b0 * (1 - VOLUME_BLUR_STRENGTH) + b_avg * VOLUME_BLUR_STRENGTH
+            smoothed[y, x, 3] = a0
+
+    return smoothed.astype(np.uint8)
+
 # =========================================================
 # ILUMINACIÓN VOLUMÉTRICA FALSA
 # =========================================================
@@ -1392,6 +1447,7 @@ for frame in range(FRAMES):
 
     img = apply_bloom(img)
     img = tone_mapping(img)
+    img = volumetric_smoothing(img)
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
     
