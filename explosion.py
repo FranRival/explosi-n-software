@@ -1594,41 +1594,37 @@ for frame in range(FRAMES):
 
 
     # =====================================================
-    # PARTICULAS
-    # =====================================================
-
-    for p in particles:
-
-        if p.alive():
-
-            p.update(dt, t)
-
-            # =====================================================
-# MOTION BLUR PARTICULA
+# PARTICULAS + MOTION BLUR
 # =====================================================
 
-dx = p.x - p.prev_x
-dy = p.y - p.prev_y
+for p in particles:
 
-for i in range(PARTICLE_MOTION_BLUR_STEPS):
+    if p.alive():
 
-    t_blur = i / PARTICLE_MOTION_BLUR_STEPS
+        p.update(dt, t)
 
-    bx = int(p.prev_x + dx * t_blur)
-    by = int(p.prev_y + dy * t_blur)
+        dx = p.x - p.prev_x
+        dy = p.y - p.prev_y
 
-    if 0 <= bx < WIDTH and 0 <= by < HEIGHT:
+        for i in range(PARTICLE_MOTION_BLUR_STEPS):
 
-        falloff = 1 - t_blur
+            t_blur = i / PARTICLE_MOTION_BLUR_STEPS
 
-        r = int(255 * falloff * PARTICLE_MOTION_BLUR_STRENGTH)
-        g = int(200 * falloff * PARTICLE_MOTION_BLUR_STRENGTH)
-        b = int(80 * falloff * PARTICLE_MOTION_BLUR_STRENGTH)
+            bx = int(p.prev_x + dx * t_blur)
+            by = int(p.prev_y + dy * t_blur)
 
-        img[by, bx, 0] = max(img[by, bx, 0], r)
-        img[by, bx, 1] = max(img[by, bx, 1], g)
-        img[by, bx, 2] = max(img[by, bx, 2], b)
-        img[by, bx, 3] = 255
+            if 0 <= bx < WIDTH and 0 <= by < HEIGHT:
+
+                falloff = 1 - t_blur
+
+                r = int(255 * falloff * PARTICLE_MOTION_BLUR_STRENGTH)
+                g = int(200 * falloff * PARTICLE_MOTION_BLUR_STRENGTH)
+                b = int(80 * falloff * PARTICLE_MOTION_BLUR_STRENGTH)
+
+                img[by, bx, 0] = max(img[by, bx, 0], r)
+                img[by, bx, 1] = max(img[by, bx, 1], g)
+                img[by, bx, 2] = max(img[by, bx, 2], b)
+                img[by, bx, 3] = 255
 
     img = apply_bloom(img)
     img = tone_mapping(img)
