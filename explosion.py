@@ -1233,9 +1233,9 @@ def heat_distortion(img, temperature_map, t):
             )
 
             temp_factor = (temp - HEAT_DISTORTION_THRESHOLD)
-
-			offset_x = int(nx * HEAT_DISTORTION_STRENGTH * temp_factor)
-			offset_y = int(ny * HEAT_DISTORTION_STRENGTH * temp_factor)
+            
+            offset_x = int(nx * HEAT_DISTORTION_STRENGTH * temp_factor)
+            offset_y = int(ny * HEAT_DISTORTION_STRENGTH * temp_factor)
 
             sx = min(width - 1, max(0, x + offset_x))
             sy = min(height - 1, max(0, y + offset_y))
@@ -1597,10 +1597,10 @@ for frame in range(FRAMES):
                 img[py, px] = (255, 200, 80, 255)
 
     img = apply_bloom(img)
-	img = tone_mapping(img)
-	img = volumetric_smoothing(img)
-	img = heat_distortion(img, temperature_map, t)
-	img = color_grading(img)
+    img = tone_mapping(img)
+    img = volumetric_smoothing(img)
+    img = heat_distortion(img, temperature_map, t)
+    img = color_grading(img)
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
     
