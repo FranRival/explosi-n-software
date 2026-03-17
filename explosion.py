@@ -351,6 +351,13 @@ HEAT_DISTORTION_TIME = 2.0
 HEAT_DISTORTION_THRESHOLD = 0.25
 
 # =========================================================
+# MOTION BLUR PARTICULAS
+# =========================================================
+
+PARTICLE_MOTION_BLUR_STEPS = 7
+PARTICLE_MOTION_BLUR_STRENGTH = 0.5
+
+# =========================================================
 # UTILIDADES
 # =========================================================
 
@@ -1381,6 +1388,9 @@ class Particle:
 
         self.x = CENTER_X
         self.y = CENTER_Y
+        
+        self.prev_x = CENTER_X
+		self.prev_y = CENTER_Y
 
         self.age = 0
 
@@ -1391,6 +1401,9 @@ class Particle:
 
         local_t = global_t - self.delay
         energy = energy_curve(local_t)
+        
+        self.prev_x = self.x
+		self.prev_y = self.y
 
         self.x += self.vx * dt * energy
         self.y += self.vy * dt * energy
@@ -1590,11 +1603,32 @@ for frame in range(FRAMES):
 
             p.update(dt, t)
 
-            px = int(p.x)
-            py = int(p.y)
+            # =====================================================
+# MOTION BLUR PARTICULA
+# =====================================================
 
-            if 0 <= px < WIDTH and 0 <= py < HEIGHT:
-                img[py, px] = (255, 200, 80, 255)
+dx = p.x - p.prev_x
+dy = p.y - p.prev_y
+
+for i in range(PARTICLE_MOTION_BLUR_STEPS):
+
+    t_blur = i / PARTICLE_MOTION_BLUR_STEPS
+
+    bx = int(p.prev_x + dx * t_blur)
+    by = int(p.prev_y + dy * t_blur)
+
+    if 0 <= bx < WIDTH and 0 <= by < HEIGHT:
+
+        falloff = 1 - t_blur
+
+        r = int(255 * falloff * PARTICLE_MOTION_BLUR_STRENGTH)
+        g = int(200 * falloff * PARTICLE_MOTION_BLUR_STRENGTH)
+        b = int(80 * falloff * PARTICLE_MOTION_BLUR_STRENGTH)
+
+        img[by, bx, 0] = max(img[by, bx, 0], r)
+        img[by, bx, 1] = max(img[by, bx, 1], g)
+        img[by, bx, 2] = max(img[by, bx, 2], b)
+        img[by, bx, 3] = 255
 
     img = apply_bloom(img)
     img = tone_mapping(img)
