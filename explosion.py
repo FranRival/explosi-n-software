@@ -1116,9 +1116,9 @@ def volumetric_smoothing(img):
     for y in range(height):
         for x in range(width):
 
-            r_total = 0
-            g_total = 0
-            b_total = 0
+            r_total = 0.0
+            g_total = 0.0
+            b_total = 0.0
             count = 0
 
             for dy in range(-VOLUME_BLUR_RADIUS, VOLUME_BLUR_RADIUS + 1):
@@ -1132,9 +1132,9 @@ def volumetric_smoothing(img):
 
                     r, g, b, _ = img[ny, nx]
 
-                    r_total += r
-                    g_total += g
-                    b_total += b
+                    r_total += int(r)
+                    g_total += int(g)
+                    b_total += int(b)
                     count += 1
 
             r_avg = r_total / count
