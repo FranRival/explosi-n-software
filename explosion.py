@@ -1627,13 +1627,13 @@ for frame in range(FRAMES):
 
     # POST PROCESO CORRECTO
 
-img = apply_bloom(img)                # luz primero
-img = heat_distortion(img, temperature_map, t)  # distorsión sobre HDR
-img = volumetric_smoothing(img)      # suavizado
+    img = apply_bloom(img)                # luz primero
+    img = heat_distortion(img, temperature_map, t)  # distorsión sobre HDR
+    img = volumetric_smoothing(img)      # suavizado
 
-img = color_grading(img)             # color antes de comprimir
-img = tone_mapping(img)              # compresión final
-    
+    img = color_grading(img)             # color antes de comprimir
+    img = tone_mapping(img)              # compresión final
+        
     
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
