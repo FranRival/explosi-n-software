@@ -1390,7 +1390,7 @@ class Particle:
         self.y = CENTER_Y
         
         self.prev_x = CENTER_X
-		self.prev_y = CENTER_Y
+        self.prev_y = CENTER_Y
 
         self.age = 0
 
@@ -1403,7 +1403,7 @@ class Particle:
         energy = energy_curve(local_t)
         
         self.prev_x = self.x
-		self.prev_y = self.y
+        self.prev_y = self.y
 
         self.x += self.vx * dt * energy
         self.y += self.vy * dt * energy
@@ -1593,44 +1593,48 @@ for frame in range(FRAMES):
                     img[y, x, 3] = max(img[y, x, 3], alpha)
 
 
+    ## =====================================================
+    # PARTICULAS + MOTION BLUR
     # =====================================================
-# PARTICULAS + MOTION BLUR
-# =====================================================
+    for p in particles:
 
-for p in particles:
+        if p.alive():
 
-    if p.alive():
+            p.update(dt, t)
 
-        p.update(dt, t)
+            dx = p.x - p.prev_x
+            dy = p.y - p.prev_y
 
-        dx = p.x - p.prev_x
-        dy = p.y - p.prev_y
+            for i in range(PARTICLE_MOTION_BLUR_STEPS):
 
-        for i in range(PARTICLE_MOTION_BLUR_STEPS):
+                t_blur = i / PARTICLE_MOTION_BLUR_STEPS
 
-            t_blur = i / PARTICLE_MOTION_BLUR_STEPS
+                bx = int(p.prev_x + dx * t_blur)
+                by = int(p.prev_y + dy * t_blur)
 
-            bx = int(p.prev_x + dx * t_blur)
-            by = int(p.prev_y + dy * t_blur)
+                if 0 <= bx < WIDTH and 0 <= by < HEIGHT:
 
-            if 0 <= bx < WIDTH and 0 <= by < HEIGHT:
+                    falloff = 1 - t_blur
 
-                falloff = 1 - t_blur
+                    r = int(255 * falloff * PARTICLE_MOTION_BLUR_STRENGTH)
+                    g = int(200 * falloff * PARTICLE_MOTION_BLUR_STRENGTH)
+                    b = int(80 * falloff * PARTICLE_MOTION_BLUR_STRENGTH)
 
-                r = int(255 * falloff * PARTICLE_MOTION_BLUR_STRENGTH)
-                g = int(200 * falloff * PARTICLE_MOTION_BLUR_STRENGTH)
-                b = int(80 * falloff * PARTICLE_MOTION_BLUR_STRENGTH)
+                    img[by, bx, 0] = max(img[by, bx, 0], r)
+                    img[by, bx, 1] = max(img[by, bx, 1], g)
+                    img[by, bx, 2] = max(img[by, bx, 2], b)
+                    img[by, bx, 3] = 255
 
-                img[by, bx, 0] = max(img[by, bx, 0], r)
-                img[by, bx, 1] = max(img[by, bx, 1], g)
-                img[by, bx, 2] = max(img[by, bx, 2], b)
-                img[by, bx, 3] = 255
+    # POST PROCESO CORRECTO
 
-    img = apply_bloom(img)
-    img = tone_mapping(img)
-    img = volumetric_smoothing(img)
-    img = heat_distortion(img, temperature_map, t)
-    img = color_grading(img)
+img = apply_bloom(img)                # luz primero
+img = heat_distortion(img, temperature_map, t)  # distorsión sobre HDR
+img = volumetric_smoothing(img)      # suavizado
+
+img = color_grading(img)             # color antes de comprimir
+img = tone_mapping(img)              # compresión final
+    
+    
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
     
