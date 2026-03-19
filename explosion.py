@@ -9,6 +9,7 @@ import random
 import numpy as np
 from PIL import Image
 from noise import pnoise2
+from scipy.ndimage import gaussian_filter
 
 
 # =========================================================
@@ -37,6 +38,8 @@ DY = Y - CENTER_Y
 
 DIST_MAP = np.sqrt(DX**2 + DY**2)
 ANGLE_MAP = np.arctan2(DY, DX)
+
+SIN_MAP = np.sin(ANGLE_MAP)
 
 RADIAL_DENSITY_WEIGHT = 1.4
 RADIAL_DENSITY_POWER = 1.6
@@ -549,14 +552,8 @@ def dynamic_turbulence_detail(x, y, t):
 
 def volumetric_mass(x, y, t):
 
-    # masa base
-    base_mass = fbm(x + 12000, y + 12000, t, VOLUME_MASS_SCALE)
-
-    # detalle interno
-    detail_mass = fbm_deep(x - 12000, y - 12000, t, VOLUME_MASS_DETAIL_SCALE)
-
-    base_mass *= VOLUME_MASS_STRENGTH
-    detail_mass *= VOLUME_MASS_DETAIL_STRENGTH
+    base_mass = noise_mass[y, x] * VOLUME_MASS_STRENGTH
+    detail_mass = noise_mass_detail[y, x] * VOLUME_MASS_DETAIL_STRENGTH
 
     return base_mass + detail_mass
 
@@ -594,18 +591,10 @@ def mushroom_lobes(x, y, t, dist, base_radius):
 
 def internal_structure(x, y, t):
 
-    # masa irregular
-    structure = fbm(x + 18000, y + 18000, t, INTERNAL_STRUCTURE_SCALE)
+    structure = noise_internal[y, x] * INTERNAL_STRUCTURE_STRENGTH
+    cavities = noise_cavity[y, x] * INTERNAL_CAVITY_STRENGTH
 
-    # cavidades internas
-    cavities = fbm_deep(x - 18000, y - 18000, t, INTERNAL_CAVITY_SCALE)
-
-    structure *= INTERNAL_STRUCTURE_STRENGTH
-    cavities *= INTERNAL_CAVITY_STRENGTH
-
-    # las cavidades restan densidad
     return structure - abs(cavities)
-
 
 # =========================================================
 # VOLUMEN APARENTE
@@ -665,116 +654,63 @@ def mass_compression(dist, base_radius):
 
 def density_field(x, y, t, base_radius):
 
-    ix = x
-    iy = y
+   
+    dx = DX[y, x]
+    dy = DY[y, x]
 
-    dx = x - CENTER_X
-    dy = y - CENTER_Y
+	dy_lift = dy + t * DENSITY_HEIGHT_LIFT
 
-    # distorsión temporal
+	dist = math.sqrt(dx * dx + dy_lift * dy_lift)
 
-    flow_x, flow_y = temporal_flow(x, y, t)
-    detail_x, detail_y = temporal_detail(x, y, t)
+    if dist >= base_radius:
+        return 0
 
-    x += flow_x + detail_x
-    y += flow_y + detail_y
+    # =========================
+    # 1. BASE SHAPE
+    # =========================
 
-    # turbulencia dinámica
+    base = 1 - (dist / base_radius)
+    base = base ** DENSITY_FALLOFF
 
-    turb_x, turb_y = dynamic_turbulence(x, y, t)
-    turb_dx, turb_dy = dynamic_turbulence_detail(x, y, t)
-
-    x += turb_x + turb_dx
-    y += turb_y + turb_dy
-
-    dy_lift = dy + t * DENSITY_HEIGHT_LIFT
-    dist = math.sqrt(dx * dx + dy_lift * dy_lift)
-
-    # influencia radial
-    # densidad base
-
-    base_density = base_density_field(dist, base_radius)
     radial = radial_modifier(dist, base_radius)
+    base *= radial
 
-    base_density *= radial
+    # =========================
+    # 2. STRUCTURE (volumen)
+    # =========================
 
-    # ruido procedural
+    structure = (
+        noise_macro[y, x] * 0.5 +
+        noise_super[y, x] * 0.3 +
+        noise_mass[y, x] * 0.2
+    )
 
-    noise = perlin(x, y, t, DENSITY_NOISE_SCALE)
-    noise_density = noise * DENSITY_NOISE_STRENGTH
+    structure *= 1.2
 
-    # fractal brownian motion
+    # =========================
+    # 3. DETAIL (micro)
+    # =========================
 
-    
-    fbm_macro = noise_macro[iy, ix]
-    fbm_detail = noise_detail[iy, ix]
-    fbm_value = (fbm_macro * 0.7 + fbm_detail * 0.3) * FBM_STRENGTH
+    detail = (
+        noise_detail[y, x] * 0.5 +
+        noise_micro[y, x] * 0.3 +
+        noise_micro_detail[y, x] * 0.2
+    )
 
-    # ruido fractal profundo
+    detail *= 0.6
 
-    fbm_micro = noise_micro[iy, ix]
-    fbm_micro *= FBM_DEEP_STRENGTH
+    # =========================
+    # ALTURA + COMPRESIÓN
+    # =========================
 
-    # multi scale noise
-
-    fbm_super = noise_super[iy, ix]
-    fbm_super *= FBM_SUPER_MACRO_STRENGTH
-
-    fbm_fine = noise_fine[iy, ix]
-    fbm_fine *= FBM_FINE_STRENGTH
-
-    # macro forma
-
-    macro_shape = noise_macro_shape[iy, ix]
-    macro_shape *= MACRO_SHAPE_STRENGTH
-
-    # micro detalle
-
-    micro_detail = noise_micro_detail[iy, ix]
-    micro_detail *= MICRO_DETAIL_STRENGTH
-
-    # influencia de altura
-
-    height_component = height_density(y, t)
-
-    # compresión interna
-
+    height = height_density(y, t)
     compression = mass_compression(dist, base_radius)
 
-    # masa volumétrica
+    # =========================
+    # DENSIDAD FINAL
+    # =========================
 
-    volume_mass = volumetric_mass(x, y, t)
-
-    # bultos tipo hongo
-
-    mushroom = mushroom_lobes(x, y, t, dist, base_radius)
-
-    # estructura irregular interna
-
-    internal = internal_structure(x, y, t)
-
-    # volumen aparente
-
-    apparent = apparent_volume(dist, base_radius)
-
-    # densidad final
-
-    density = (
-        base_density
-        + noise_density
-        + height_component
-        + compression
-        + volume_mass
-        + mushroom
-        + internal
-        + apparent
-        + fbm_value
-        + fbm_micro
-        + fbm_super
-        + fbm_fine
-        + macro_shape
-        + micro_detail
-    )
+    density = base + structure + detail + height + compression
 
     return max(0, density)
 
@@ -785,7 +721,6 @@ def density_field(x, y, t, base_radius):
 
 def temperature_field(x, y, t, dist, base_radius, density):
 
-    # temperatura base radial
     r = dist / (base_radius + 1e-5)
 
     if r > 1:
@@ -794,28 +729,26 @@ def temperature_field(x, y, t, dist, base_radius, density):
     radial_temp = (1 - r) ** TEMPERATURE_DECAY
     radial_temp *= TEMPERATURE_CORE
 
-    # temperatura derivada de la densidad
     density_temp = (density ** TEMPERATURE_DENSITY_POWER) * DENSITY_TO_TEMPERATURE
 
-    # ruido térmico
-    heat_noise = fbm(x + 21000, y + 21000, t, TEMPERATURE_NOISE_SCALE)
-    heat_noise *= TEMPERATURE_NOISE_STRENGTH
+    # ✅ NUEVO (rápido)
+    heat_noise = noise_temp[y, x] * TEMPERATURE_NOISE_STRENGTH
 
-    # flotabilidad del calor
     vertical = max(0, (CENTER_Y - y) / HEIGHT)
     buoyancy = vertical * HEAT_BUOYANCY
 
-    # gradiente térmico continuo
-    gradient = thermal_gradient(x, y, t)
-    
+    # ✅ NUEVO (rápido)
+    gradient = noise_thermal[y, x] * THERMAL_GRADIENT_STRENGTH
+
     transition = thermal_transition(dist, base_radius)
+
     temperature = (
         radial_temp
-    	+ density_temp
-		+ heat_noise
+        + density_temp
+        + heat_noise
         + buoyancy
-    	+ gradient
-	) * transition
+        + gradient
+    ) * transition
 
     return max(0, temperature)
     
@@ -825,14 +758,7 @@ def temperature_field(x, y, t, dist, base_radius, density):
 # GRADIENTE TÉRMICO CONTINUO
 # =========================================================
 
-def thermal_gradient(x, y, t):
 
-    # difusión del calor en el fluido
-    gradient = fbm(x + 26000, y + 26000, t, THERMAL_GRADIENT_SCALE)
-
-    gradient *= THERMAL_GRADIENT_STRENGTH
-
-    return gradient
     
 
 # =========================================================
@@ -1031,47 +957,24 @@ def volumetric_shading(x, y, density_map, density):
 
 def apply_bloom(img):
 
-    height, width, _ = img.shape
-
-    bloom = np.zeros_like(img, dtype=np.float32)
-
-    for y in range(height):
-        for x in range(width):
-
-            r, g, b, a = img[y, x]
-
-            brightness = (int(r) + int(g) + int(b)) / 3
-
-            if brightness < BLOOM_THRESHOLD:
-                continue
-
-            for dy in range(-BLOOM_RADIUS, BLOOM_RADIUS + 1):
-                for dx in range(-BLOOM_RADIUS, BLOOM_RADIUS + 1):
-
-                    nx = x + dx
-                    ny = y + dy
-
-                    if nx < 0 or nx >= width or ny < 0 or ny >= height:
-                        continue
-
-                    dist = math.sqrt(dx*dx + dy*dy)
-
-                    if dist > BLOOM_RADIUS:
-                        continue
-
-                    falloff = 1 - dist / BLOOM_RADIUS
-
-                    bloom[ny, nx, 0] += r * falloff
-                    bloom[ny, nx, 1] += g * falloff
-                    bloom[ny, nx, 2] += b * falloff
-
     img = img.astype(np.float32)
+
+    # calcular brillo
+    brightness = img[:, :, 0] + img[:, :, 1] + img[:, :, 2]
+    brightness /= 3
+
+    # máscara de zonas brillantes
+    mask = brightness > BLOOM_THRESHOLD
+
+    bloom = np.zeros_like(img)
+
+    for c in range(3):
+        channel = img[:, :, c] * mask
+        bloom[:, :, c] = gaussian_filter(channel, sigma=BLOOM_RADIUS)
 
     img[:, :, 0:3] += bloom[:, :, 0:3] * BLOOM_STRENGTH
 
-    img = np.clip(img, 0, 255)
-
-    return img.astype(np.uint8)
+    return np.clip(img, 0, 255).astype(np.uint8)
     
   
     
@@ -1085,28 +988,13 @@ def tone_mapping(img):
 
     img = img.astype(np.float32)
 
-    height, width, _ = img.shape
+    # exposición
+    img[:, :, :3] = 255 * (1 - np.exp(-img[:, :, :3] * HDR_EXPOSURE / 255))
 
-    for y in range(height):
-        for x in range(width):
+    # contraste
+    img[:, :, :3] = ((img[:, :, :3] - 128) * HDR_CONTRAST) + 128
 
-            r, g, b, a = img[y, x]
-
-            # compresión exponencial
-            r = 255 * (1 - math.exp(-r * HDR_EXPOSURE / 255))
-            g = 255 * (1 - math.exp(-g * HDR_EXPOSURE / 255))
-            b = 255 * (1 - math.exp(-b * HDR_EXPOSURE / 255))
-
-            # ajuste de contraste
-            r = ((r - 128) * HDR_CONTRAST) + 128
-            g = ((g - 128) * HDR_CONTRAST) + 128
-            b = ((b - 128) * HDR_CONTRAST) + 128
-
-            img[y, x, 0] = clamp(r)
-            img[y, x, 1] = clamp(g)
-            img[y, x, 2] = clamp(b)
-
-    return img.astype(np.uint8)
+    return np.clip(img, 0, 255).astype(np.uint8)
 
 
 
@@ -1116,46 +1004,17 @@ def tone_mapping(img):
 
 def volumetric_smoothing(img):
 
-    height, width, _ = img.shape
+    img = img.astype(np.float32)
 
-    smoothed = img.copy().astype(np.float32)
+    for c in range(3):  # R, G, B
+        blurred = gaussian_filter(img[:, :, c], sigma=VOLUME_BLUR_RADIUS)
 
-    for y in range(height):
-        for x in range(width):
+        img[:, :, c] = (
+            img[:, :, c] * (1 - VOLUME_BLUR_STRENGTH) +
+            blurred * VOLUME_BLUR_STRENGTH
+        )
 
-            r_total = 0.0
-            g_total = 0.0
-            b_total = 0.0
-            count = 0
-
-            for dy in range(-VOLUME_BLUR_RADIUS, VOLUME_BLUR_RADIUS + 1):
-                for dx in range(-VOLUME_BLUR_RADIUS, VOLUME_BLUR_RADIUS + 1):
-
-                    nx = x + dx
-                    ny = y + dy
-
-                    if nx < 0 or nx >= width or ny < 0 or ny >= height:
-                        continue
-
-                    r, g, b, _ = img[ny, nx]
-
-                    r_total += int(r)
-                    g_total += int(g)
-                    b_total += int(b)
-                    count += 1
-
-            r_avg = r_total / count
-            g_avg = g_total / count
-            b_avg = b_total / count
-
-            r0, g0, b0, a0 = img[y, x]
-
-            smoothed[y, x, 0] = r0 * (1 - VOLUME_BLUR_STRENGTH) + r_avg * VOLUME_BLUR_STRENGTH
-            smoothed[y, x, 1] = g0 * (1 - VOLUME_BLUR_STRENGTH) + g_avg * VOLUME_BLUR_STRENGTH
-            smoothed[y, x, 2] = b0 * (1 - VOLUME_BLUR_STRENGTH) + b_avg * VOLUME_BLUR_STRENGTH
-            smoothed[y, x, 3] = a0
-
-    return smoothed.astype(np.uint8)
+    return np.clip(img, 0, 255).astype(np.uint8)
 
 
 # =========================================================
@@ -1442,6 +1301,23 @@ for frame in range(FRAMES):
     
     noise_macro_shape = generate_noise_field(MACRO_SHAPE_SCALE, t, -3000, -3000)
     noise_micro_detail = generate_noise_field(MICRO_DETAIL_SCALE, t, 3500, 3500)
+    
+    # =====================================================
+	# NUEVOS MAPAS (OPTIMIZACIÓN PASO 3)
+	# =====================================================
+
+	noise_temp = generate_noise_field(TEMPERATURE_NOISE_SCALE, t, 21000, 21000)
+	noise_thermal = generate_noise_field(THERMAL_GRADIENT_SCALE, t, 26000, 26000)
+
+	noise_mass = generate_noise_field(VOLUME_MASS_SCALE, t, 12000, 12000)
+	noise_mass_detail = generate_noise_field(VOLUME_MASS_DETAIL_SCALE, t, -12000, -12000)
+
+	noise_internal = generate_noise_field(INTERNAL_STRUCTURE_SCALE, t, 18000, 18000)
+	noise_cavity = generate_noise_field(INTERNAL_CAVITY_SCALE, t, -18000, -18000)
+    
+    noise_distort = generate_noise_field(NOISE_SCALE, t, 9000, 9000)
+    
+    
 
 
     img = np.zeros((HEIGHT, WIDTH, 4), dtype=np.uint8)
@@ -1455,6 +1331,16 @@ for frame in range(FRAMES):
     outer_radius = RADIUS_OUTER + base_radius
 
 
+
+
+	# =====================================================
+	# MÁSCARA GLOBAL VECTORIAL
+	# =====================================================
+    angle_mask = np.abs(ANGLE_MAP) < FAN_OPENING
+    hole_mask = DIST_MAP > RADIAL_HOLE
+    
+    base_mask = angle_mask & hole_mask
+
     # =====================================================
     # PASS 1 — CALCULAR DENSIDAD
     # =====================================================
@@ -1462,29 +1348,68 @@ for frame in range(FRAMES):
     for y in range(HEIGHT):
         for x in range(WIDTH):
 
-            dx = x - CENTER_X
-            dy = y - CENTER_Y
-            dist = math.sqrt(dx * dx + dy * dy)
-            angle = math.atan2(dy, dx)
+            dist = DIST_MAP[y, x]
+            angle = ANGLE_MAP[y, x]
             
-            if not fan_mask(angle):
+            if not base_mask[y, x]:
                 continue
+
+
+            dx = DX[y, x]
+dy = DY[y, x]
+
+dy_lift = dy + t * DENSITY_HEIGHT_LIFT
+
+dist_local = math.sqrt(dx * dx + dy * dy)
+
+if dist_local >= outer_radius:
+    continue
+
+# BASE
+base = 1 - (dist_local / outer_radius)
+base = base ** DENSITY_FALLOFF
+
+radial = radial_modifier(dist_local, outer_radius)
+base *= radial
+
+# STRUCTURE
+structure = (
+    noise_macro[y, x] * 0.5 +
+    noise_super[y, x] * 0.3 +
+    noise_mass[y, x] * 0.2
+)
+structure *= 1.2
+
+# DETAIL
+detail = (
+    noise_detail[y, x] * 0.5 +
+    noise_micro[y, x] * 0.3 +
+    noise_micro_detail[y, x] * 0.2
+)
+detail *= 0.6
+
+# HEIGHT + COMPRESSION
+height = height_density(y, t)
+compression = mass_compression(dist_local, outer_radius)
+
+# FINAL
+density = base + structure + detail + height + compression
+
+if density <= 0:
+    continue
+
             
-            if dist < RADIAL_HOLE:
-                continue
-
-
-            density = density_field(x, y, t, outer_radius)
-
-            if density <= 0:
-                continue
-
-            ang = angular_weight(angle)
-            tear = tear_shape(angle)
+            sin_val = SIN_MAP[y, x]
+            up = (sin_val + 1) * 0.5
+            ang = 1 + (up * (ANGULAR_BIAS_UP - 1))
+            
+            tear = 1 + (sin_val * 0.35 * TEAR_FACTOR)
+            
+            
 
             wave = 1 + 0.12 * math.sin(MICRO_WAVE_FREQ * dist - frame * 0.4)
 
-            noise_val = perlin(x, y, t, NOISE_SCALE)
+            noise_val = noise_distort[y, x]
 
             distortion = (1 + noise_val * NOISE_STRENGTH) * wave * tear * ang
 
@@ -1557,7 +1482,7 @@ for frame in range(FRAMES):
 
                 dx = x - CENTER_X
                 dy = y - CENTER_Y
-                dist = math.sqrt(dx * dx + dy * dy)
+                dist = DIST_MAP[y, x]
 
                 if abs(dist - burst_radius) < 3:
                     img[y, x] = (255, 220, 100, 255)
@@ -1575,7 +1500,7 @@ for frame in range(FRAMES):
             dx = x - CENTER_X
             dy = y - CENTER_Y - t * 80
 
-            dist = math.sqrt(dx * dx + dy * dy)
+            dist = DIST_MAP[y, x]
 
             if dist < smoke_radius:
 
