@@ -657,10 +657,10 @@ def density_field(x, y, t, base_radius):
    
     dx = DX[y, x]
     dy = DY[y, x]
-
-	dy_lift = dy + t * DENSITY_HEIGHT_LIFT
-
-	dist = math.sqrt(dx * dx + dy_lift * dy_lift)
+    
+    dy_lift = dy + t * DENSITY_HEIGHT_LIFT
+    
+    dist = math.sqrt(dx * dx + dy_lift * dy_lift)
 
     if dist >= base_radius:
         return 0
@@ -1305,15 +1305,15 @@ for frame in range(FRAMES):
     # =====================================================
 	# NUEVOS MAPAS (OPTIMIZACIÓN PASO 3)
 	# =====================================================
-
-	noise_temp = generate_noise_field(TEMPERATURE_NOISE_SCALE, t, 21000, 21000)
-	noise_thermal = generate_noise_field(THERMAL_GRADIENT_SCALE, t, 26000, 26000)
-
-	noise_mass = generate_noise_field(VOLUME_MASS_SCALE, t, 12000, 12000)
-	noise_mass_detail = generate_noise_field(VOLUME_MASS_DETAIL_SCALE, t, -12000, -12000)
-
-	noise_internal = generate_noise_field(INTERNAL_STRUCTURE_SCALE, t, 18000, 18000)
-	noise_cavity = generate_noise_field(INTERNAL_CAVITY_SCALE, t, -18000, -18000)
+    
+    noise_temp = generate_noise_field(TEMPERATURE_NOISE_SCALE, t, 21000, 21000)
+    noise_thermal = generate_noise_field(THERMAL_GRADIENT_SCALE, t, 26000, 26000)
+    
+    noise_mass = generate_noise_field(VOLUME_MASS_SCALE, t, 12000, 12000)
+    noise_mass_detail = generate_noise_field(VOLUME_MASS_DETAIL_SCALE, t, -12000, -12000)
+    
+    noise_internal = generate_noise_field(INTERNAL_STRUCTURE_SCALE, t, 18000, 18000)
+    noise_cavity = generate_noise_field(INTERNAL_CAVITY_SCALE, t, -18000, -18000)
     
     noise_distort = generate_noise_field(NOISE_SCALE, t, 9000, 9000)
     
@@ -1356,47 +1356,47 @@ for frame in range(FRAMES):
 
 
             dx = DX[y, x]
-dy = DY[y, x]
+            dy = DY[y, x]
 
-dy_lift = dy + t * DENSITY_HEIGHT_LIFT
+            dy_lift = dy + t * DENSITY_HEIGHT_LIFT
 
-dist_local = math.sqrt(dx * dx + dy * dy)
+            dist_local = math.sqrt(dx * dx + dy * dy)
 
-if dist_local >= outer_radius:
-    continue
+            if dist_local >= outer_radius:
+                continue
 
-# BASE
-base = 1 - (dist_local / outer_radius)
-base = base ** DENSITY_FALLOFF
+            # BASE
+            base = 1 - (dist_local / outer_radius)
+            base = base ** DENSITY_FALLOFF
 
-radial = radial_modifier(dist_local, outer_radius)
-base *= radial
+            radial = radial_modifier(dist_local, outer_radius)
+            base *= radial
 
-# STRUCTURE
-structure = (
-    noise_macro[y, x] * 0.5 +
-    noise_super[y, x] * 0.3 +
-    noise_mass[y, x] * 0.2
-)
-structure *= 1.2
+            # STRUCTURE
+            structure = (
+                noise_macro[y, x] * 0.5 +
+                noise_super[y, x] * 0.3 +
+                noise_mass[y, x] * 0.2
+            )
+            structure *= 1.2
 
-# DETAIL
-detail = (
-    noise_detail[y, x] * 0.5 +
-    noise_micro[y, x] * 0.3 +
-    noise_micro_detail[y, x] * 0.2
-)
-detail *= 0.6
+            # DETAIL
+            detail = (
+                noise_detail[y, x] * 0.5 +
+                noise_micro[y, x] * 0.3 +
+                noise_micro_detail[y, x] * 0.2
+            )
+            detail *= 0.6
 
-# HEIGHT + COMPRESSION
-height = height_density(y, t)
-compression = mass_compression(dist_local, outer_radius)
+            # HEIGHT + COMPRESSION
+            height = height_density(y, t)
+            compression = mass_compression(dist_local, outer_radius)
 
-# FINAL
-density = base + structure + detail + height + compression
+            # FINAL
+            density = base + structure + detail + height + compression
 
-if density <= 0:
-    continue
+            if density <= 0:
+                continue
 
             
             sin_val = SIN_MAP[y, x]
