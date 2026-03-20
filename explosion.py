@@ -39,7 +39,7 @@ DIST_MAP = np.sqrt(DX**2 + DY**2)
 ANGLE_MAP = np.arctan2(DY, DX)
 
 RADIAL_DENSITY_WEIGHT = 1.4
-RADIAL_DENSITY_POWER = 1.6
+RADIAL_DENSITY_POWER = 1.8
 
 SEED = 42
 random.seed(SEED)
@@ -56,40 +56,40 @@ FAN_OPENING = math.pi * 0.9
 TEAR_FACTOR = 1.4
 RADIAL_HOLE = 25
 
-BASE_SPEED = 220
-ENERGY_PEAK = 2.0
-ENERGY_REBOUND = 0.35
+BASE_SPEED = 260
+ENERGY_PEAK = 2.4
+ENERGY_REBOUND = 0.25
 
 SECONDARY_BURST_TIME = 0.45
 MICRO_WAVE_FREQ = 10
 
-RADIUS_CORE = 40
-RADIUS_INNER = 85
-RADIUS_OUTER = 130
+RADIUS_CORE = 35
+RADIUS_INNER = 90
+RADIUS_OUTER = 150
 
 INTENSITY_CORE = 2.0
 
 NOISE_SCALE = 0.008
-NOISE_STRENGTH = 0.5
+NOISE_STRENGTH = 0.65
 
 SMOKE_OPACITY = 130
 SMOKE_SCALE = 0.004
 
-PARTICLE_COUNT = 180
-PARTICLE_SPEED = (140, 300)
-PARTICLE_DRAG = 0.96
+PARTICLE_COUNT = 140
+PARTICLE_SPEED = (180, 320)
+PARTICLE_DRAG = 0.94
 
 
 # =========================================================
 # PARÁMETROS NIVEL 2 (CAMPO DE DENSIDAD)
 # =========================================================
 
-DENSITY_FALLOFF = 2.0
+DENSITY_FALLOFF = 2.2
 DENSITY_HEIGHT_LIFT = 120
 DENSITY_NOISE_SCALE = 0.01
 DENSITY_NOISE_STRENGTH = 0.6
 
-HEIGHT_DENSITY_WEIGHT = 1.7
+HEIGHT_DENSITY_WEIGHT = 2.2
 HEIGHT_DENSITY_POWER = 1.4
 
 # compresión interna de masa
@@ -126,7 +126,7 @@ FBM_LACUNARITY = 2.0
 FBM_SCALE_MACRO = 0.004
 FBM_SCALE_DETAIL = 0.02
 
-FBM_STRENGTH = 0.65
+FBM_STRENGTH = 0.8
 
 # ruido fractal profundo (6-8 octavas)
 
@@ -135,7 +135,7 @@ FBM_DEEP_GAIN = 0.55
 FBM_DEEP_LACUNARITY = 2.1
 
 FBM_DEEP_SCALE = 0.015
-FBM_DEEP_STRENGTH = 0.45
+FBM_DEEP_STRENGTH = 0.55
 
 
 # =========================================================
@@ -157,7 +157,7 @@ MACRO_SHAPE_SCALE = 0.002
 MACRO_SHAPE_STRENGTH = 0.7
 
 MICRO_DETAIL_SCALE = 0.06
-MICRO_DETAIL_STRENGTH = 0.25
+MICRO_DETAIL_STRENGTH = 0.35
 
 
 # =========================================================
@@ -209,7 +209,7 @@ MUSHROOM_CAP_RADIUS = 0.65
 # =========================================================
 
 INTERNAL_STRUCTURE_SCALE = 0.008
-INTERNAL_STRUCTURE_STRENGTH = 0.8
+INTERNAL_STRUCTURE_STRENGTH = 1.0
 
 INTERNAL_CAVITY_SCALE = 0.015
 INTERNAL_CAVITY_STRENGTH = 0.6
@@ -227,15 +227,15 @@ APPARENT_VOLUME_RADIUS = 0.75
 # NIVEL 3 — MODELO TÉRMICO
 # =========================================================
 
-TEMPERATURE_CORE = 1.8
-TEMPERATURE_DECAY = 1.4
+TEMPERATURE_CORE = 2.2
+TEMPERATURE_DECAY = 1.3
 TEMPERATURE_NOISE_SCALE = 0.01
 TEMPERATURE_NOISE_STRENGTH = 0.35
 
 HEAT_BUOYANCY = 1.2
 
 # relación densidad → temperatura
-DENSITY_TO_TEMPERATURE = 1.6
+DENSITY_TO_TEMPERATURE = 2.2
 TEMPERATURE_DENSITY_POWER = 1.2
 
 # difusión térmica
@@ -245,7 +245,7 @@ THERMAL_GRADIENT_STRENGTH = 0.6
 # transición núcleo → periferia
 THERMAL_TRANSITION_RADIUS = 0.65
 THERMAL_TRANSITION_POWER = 2.0
-THERMAL_COOLING_RATE = 0.7
+THERMAL_COOLING_RATE = 0.55
 
 # =========================================================
 # SOMBREADO VOLUMÉTRICO
@@ -254,9 +254,9 @@ THERMAL_COOLING_RATE = 0.7
 LIGHT_DIR_X = -0.6
 LIGHT_DIR_Y = -0.8
 
-SHADOW_STRENGTH = 0.7
-SCATTER_STRENGTH = 0.5
-ABSORPTION = 0.6
+SHADOW_STRENGTH = 0.8
+SCATTER_STRENGTH = 0.6
+ABSORPTION = 0.65
 
 # =========================================================
 # ILUMINACIÓN VOLUMÉTRICA FALSA
@@ -272,7 +272,7 @@ VOLUME_LIGHT_RADIUS = 0.7
 
 SELF_SHADOW_STEPS = 6
 SELF_SHADOW_STEP_SIZE = 6
-SELF_SHADOW_STRENGTH = 0.35
+SELF_SHADOW_STRENGTH = 0.9
 
 
 # tamaño del paso para gradiente
@@ -285,7 +285,7 @@ DENSITY_GRADIENT_STEP = 2
 PERCEPTUAL_EDGE_STRENGTH = 0.9
 PERCEPTUAL_EDGE_POWER = 1.8
 
-PERCEPTUAL_CORE_BOOST = 1.2
+PERCEPTUAL_CORE_BOOST = 1.5
 PERCEPTUAL_CORE_POWER = 1.6
 
 PERCEPTUAL_DEPTH_CONTRAST = 0.8
@@ -294,7 +294,7 @@ PERCEPTUAL_DEPTH_CONTRAST = 0.8
 # PROFUNDIDAD VISUAL
 # =========================================================
 
-VISUAL_DEPTH_STRENGTH = 0.9
+VISUAL_DEPTH_STRENGTH = 1.2
 VISUAL_DEPTH_POWER = 1.5
 VISUAL_EDGE_BRIGHTNESS = 0.6
 
@@ -302,17 +302,17 @@ VISUAL_EDGE_BRIGHTNESS = 0.6
 # BLOOM
 # =========================================================
 
-BLOOM_THRESHOLD = 200
-BLOOM_RADIUS = 4
-BLOOM_STRENGTH = 0.7
+BLOOM_THRESHOLD = 170
+BLOOM_RADIUS = 6
+BLOOM_STRENGTH = 0.9
 
 
 # =========================================================
 # TONE MAPPING (COMPRESIÓN TONAL)
 # =========================================================
 
-HDR_EXPOSURE = 1.4
-HDR_CONTRAST = 1.2
+HDR_EXPOSURE = 1.0
+HDR_CONTRAST = 1.05
 
 # =========================================================
 # SUAVIZADO VOLUMÉTRICO
@@ -326,29 +326,29 @@ VOLUME_BLUR_STRENGTH = 0.35
 # COLOR GRADING (CORRECCIÓN DE COLOR)
 # =========================================================
 
-FIRE_SATURATION = 1.25
-FIRE_WARMTH = 1.15
-FIRE_CONTRAST = 1.1
-FIRE_SHADOW = 0.85
+FIRE_SATURATION = 1.5
+FIRE_WARMTH = 1.35
+FIRE_CONTRAST = 1.2
+FIRE_SHADOW = 1.0
 
 # =========================================================
 # SHOCKWAVE
 # =========================================================
 
-SHOCKWAVE_SPEED = 420
-SHOCKWAVE_WIDTH = 6
-SHOCKWAVE_INTENSITY = 1.8
-SHOCKWAVE_DECAY = 2.0
+SHOCKWAVE_SPEED = 520
+SHOCKWAVE_WIDTH = 4
+SHOCKWAVE_INTENSITY = 2.2
+SHOCKWAVE_DECAY = 2.5
 
 
 # =========================================================
 # HEAT DISTORTION
 # =========================================================
 
-HEAT_DISTORTION_STRENGTH = 6.0
+HEAT_DISTORTION_STRENGTH = 4.0
 HEAT_DISTORTION_SCALE = 0.01
 HEAT_DISTORTION_TIME = 2.0
-HEAT_DISTORTION_THRESHOLD = 0.25
+HEAT_DISTORTION_THRESHOLD = 0.35
 
 # =========================================================
 # MOTION BLUR PARTICULAS
@@ -1307,10 +1307,10 @@ def fire_color(temperature):
         return 255, 220, 120
 
     elif temperature > 0.6:
-        return 255, 150, 60
+        return 255, 120, 60
 
     elif temperature > 0.3:
-        return 200, 70, 30
+        return 220, 60, 30
 
     else:
         return 120, 40, 20
@@ -1531,7 +1531,7 @@ for frame in range(FRAMES):
             
             temperature_map[y, x] = temperature
 
-            brightness = 1.2
+            brightness = 1.8
 
             shock = shockwave_effect(x, y, t)
             
@@ -1632,7 +1632,7 @@ for frame in range(FRAMES):
     img = volumetric_smoothing(img)      # suavizado
 
     img = color_grading(img)             # color antes de comprimir
-    img = tone_mapping(img)              # compresión final
+    #img = tone_mapping(img)              # compresión final
         
     
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
