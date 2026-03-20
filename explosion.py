@@ -1192,10 +1192,14 @@ def color_grading(img):
             # oscurecer zonas frías
             brightness = (r + g + b) / 3
 
-            if brightness < 80:
-                r *= FIRE_SHADOW
-                g *= FIRE_SHADOW
-                b *= FIRE_SHADOW
+            dark_phase = max(0, (t - 0.5) * 2)
+
+shadow_strength = 1.0 - (0.3 * dark_phase)
+
+if brightness < 80:
+    r *= shadow_strength
+    g *= shadow_strength
+    b *= shadow_strength
 
             img[y, x, 0] = clamp(r)
             img[y, x, 1] = clamp(g)
@@ -1632,9 +1636,30 @@ for frame in range(FRAMES):
     img = volumetric_smoothing(img)      # suavizado
 
     img = color_grading(img)             # color antes de comprimir
+    
+    
+    tone_strength = min(1.0, t * 2.0)
+
+if t < 0.4:
+    tone_strength = t * 1.5   # casi nada al inicio
+else:
+    tone_strength = 1.0       # completo al final
+
+img_tone = tone_mapping(img)
+
+img = img * (1 - tone_strength) + img_tone * tone_strength
+img = np.clip(img, 0, 255).astype(np.uint8)
     #img = tone_mapping(img)              # compresión final
         
+        
     
+    dark_phase = max(0, (t - 0.5) * 2)
+
+img[:, :, 0] *= (1 - 0.5 * dark_phase)
+img[:, :, 1] *= (1 - 0.5 * dark_phase)
+img[:, :, 2] *= (1 - 0.5 * dark_phase)
+
+img = np.clip(img, 0, 255).astype(np.uint8)
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
 
                 
