@@ -1162,7 +1162,7 @@ def volumetric_smoothing(img):
 # COLOR GRADING
 # =========================================================
 
-def color_grading(img):
+def color_grading(img, t):
 
     img = img.astype(np.float32)
 
@@ -1634,7 +1634,7 @@ for frame in range(FRAMES):
     img = heat_distortion(img, temperature_map, t)  # distorsión sobre HDR
     img = volumetric_smoothing(img)      # suavizado
 
-    img = color_grading(img)             # color antes de comprimir
+    img = color_grading(img, t)             # color antes de comprimir
     
     tone_strength = min(1.0, t * 2.0)
     
@@ -1647,13 +1647,17 @@ for frame in range(FRAMES):
 
     img = img * (1 - tone_strength) + img_tone * tone_strength
     img = np.clip(img, 0, 255).astype(np.uint8)
-        #img = tone_mapping(img)              # compresión final
+    #img = tone_mapping(img)              # compresión final
         
     dark_phase = max(0, (t - 0.5) * 2)
-    
-    img[:, :, 0] *= (1 - 0.5 * dark_phase)
-    img[:, :, 1] *= (1 - 0.5 * dark_phase)
-    img[:, :, 2] *= (1 - 0.5 * dark_phase)
+
+    factor = (1 - 0.5 * dark_phase)
+
+    img = img.astype(np.float32)
+
+    img[:, :, 0] *= factor
+    img[:, :, 1] *= factor
+    img[:, :, 2] *= factor
 
     img = np.clip(img, 0, 255).astype(np.uint8)
     Image.fromarray(img, "RGBA").save(f"output/frame_{frame:03}.png")
@@ -1662,4 +1666,4 @@ for frame in range(FRAMES):
     
 
 
-print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 + Nivel 4 + Nivel 5 (Shockwave) generado.")
+print("Nivel 0 + Nivel 1 + Nivel 2 + Nivel 3 + Nivel 4 + Nivel 5 (REGENERACION SCRIPT) generado.")
